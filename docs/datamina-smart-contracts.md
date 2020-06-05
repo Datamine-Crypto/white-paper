@@ -149,3 +149,41 @@ modifier preventRecursion() {
 }
 ```
 
+## Security: Our Modifiers
+
+Once again, we like to over-do it a bit on the security side in favor of gas costs.
+
+Take a look a look at our `preventSameBlock()` modifier: 
+
+```
+/**
+ * @dev To limit one action per block per address 
+ */
+modifier preventSameBlock(address targetAddress) {
+    require(addressLocks[targetAddress].blockNumber != block.number && addressLocks[targetAddress].lastMintBlockNumber != block.number, "You can not lock/unlock/mint in the same block");
+
+    _; // Call the actual code
+}
+```
+To keep things simple and to avoid potential attacks in the future we've limited our all smart contract state changes to one block per address. This means you can't lock/unlock or lock/mint within the same block.
+
+Since Ethereum blocks are only ~15 seconds in duration we though this slight time delay is not a factor for any normal user and is an added security benefit.
+
+We also have the following modifier that is used throughout all state changes:
+```
+/**
+ * @dev DAM must be locked-in to execute this function
+ */
+modifier requireLocked(address targetAddress, bool requiredState) {
+    if (requiredState) {
+        require(addressLocks[targetAddress].amount != 0, "You must have locked-in your DAM tokens");
+    }else{
+        require(addressLocks[targetAddress].amount == 0, "You must have unlocked your DAM tokens");
+    }
+
+    _; // Call the actual code
+}
+```
+This modifier allows us to quickly check if an address has DAM locked-in for a specific address. Since most state changes require this check this is an extremely useful modifier.
+
+
