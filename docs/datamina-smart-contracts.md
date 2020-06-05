@@ -30,24 +30,24 @@ Let's jump right into the FLUX smart contract code. We'll go through code in log
 
 ## Libraries & Interfaces
 
-```
+```Solidity
 pragma solidity ^0.6.0;
 ```
 To follow the OpenZepplin approach, we've decided to go with the same min compiler version. We've deployed FLUX token to mainnet with solidity 0.6.9
 
 
-```
+```Solidity
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 ```
 Right away we get into the heavy usage of OpenZepplin secure libraries. This is the base ERC-777 implementation that FLUX is based on.
 
 
-```
+```Solidity
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 ```
 We've already included ERC777.sol, why include the interface? FLUX smart contract accepts a _token as one of the constructore parameters. We'll discuss this in the **constructor** section below.
 
-```
+```Solidity
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 ```
@@ -56,7 +56,7 @@ The FLUX token is an ERC-777 token, that also implements `IERC777Recipient`. `IE
 The reason behind both of these decisions is discussed in [ERC-1820 ERC777TokensRecipient Implementation](#erc-1820-erc777tokensrecipient-implementation) section.
 
 
-```
+```Solidity
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 ```
@@ -69,7 +69,7 @@ These are critical security libraries to avoid [Integer Overflow and Underflow](
 
 Datamine (DAM) tokens can be locked-in to the FLUX smart contract (by using our two way ERC-777 operator cross-smart contract communication). The locking process is address-specific and is stored in a struct in the following format:
 
-```
+```Solidity
 /**
  * @dev Representation of each DAM Lock-in
  */
@@ -105,7 +105,7 @@ Please pay attention to explicit `uin256` types to be in line with OpenZepplin c
 
 ## Contract Inheritance & Implementations
 
-```
+```Solidity
 /**
  * @dev Datamine Crypto - FLUX Smart Contract
  */
@@ -115,7 +115,7 @@ Here you will notice something interesting. Flux token is both an `ERC777` contr
 
 ## Security: SafeMath base
 
-```
+```Solidity
 /**
  * @dev Protect against overflows by using safe math operations (these are .add,.sub functions)
  */
@@ -129,7 +129,7 @@ We're over-using a mutex pattern to avoid a form of re-entrancy attacks as descr
 
 We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#use-the-checks-effects-interactions-pattern) throughout the contract. This is why mutex is over-doing it but we want over-do it on the security in favor of small gas cost increase.
 
-```
+```Solidity
 /**
  * @dev for the re-entrancy attack protection
  */
@@ -153,7 +153,7 @@ modifier preventRecursion() {
 
 Once again, we like to over-do it a bit on the security side in favor of gas costs. Take a look a look at our `preventSameBlock()` modifier: 
 
-```
+```Solidity
 /**
  * @dev To limit one action per block per address 
  */
@@ -168,7 +168,7 @@ To keep things simple and to avoid potential attacks in the future we've limited
 Since Ethereum blocks are only ~15 seconds in duration we though this slight time delay is not a factor for any normal user and is an added security benefit.
 
 We also have the following modifier that is used throughout all state changes:
-```
+```Solidity
 /**
  * @dev DAM must be locked-in to execute this function
  */
@@ -187,7 +187,7 @@ This modifier allows us to quickly check if an address has DAM locked-in for a s
 ## Datamine (DAM) token address
 
 In the FLUX constructor we accept an address for deployed Datamine (DAM) token smart contract address:
-```
+```Solidity
 /**
  * @dev This will be DAM token smart contract address
  */
@@ -197,7 +197,7 @@ Notice the `immutable` keyword, this was introduced in Solidity 0.6.5 and it's a
 
 ## ERC-1820 ERC777TokensRecipient Implementation
 
-```
+```Solidity
 /**
  * @dev Decline some incoming transactions (Only allow FLUX smart contract to send/recieve DAM tokens)
  */
@@ -220,17 +220,17 @@ function tokensReceived(
 ```
 Our ERC777TokensRecipient implementation is quite unique here. Let's go through this line by line:
 
-```
+```Solidity
 require(amount > 0, "You must receive a positive number of tokens");
 ```
 Over-doing it on security even though amount is a unsigned int, we don't want to somehow receive 0 tokens.
 
-```
+```Solidity
 require(_msgSender() == address(_token), "You can only lock-in DAM tokens");
 ```
 Ensure that only Datamine (DAM) tokens can be sent to the FLUX smart contract. Reverts any other tokens sent to the FLUX smart contract, which is most likely done by accident by the user. Since the transaction is reverted the user gets the tokens back and is not charged a gas fee.
 
-```
+```Solidity
 // Ensure someone doesn't send in some DAM to this contract by mistake (Only the contract itself can send itself DAM)
 require(operator == address(this) , "Only FLUX contract can send itself DAM tokens");
 ```
@@ -238,12 +238,12 @@ Since DAM tokens are locked-in to the FLUX smart contract we wanted to avoid use
 
 By performing this one simple check we avoid potential loss of funds down the road. Only the FLUX contract can send itself tokens, quite a clever usage of ERC-777.
 
-```
+```Solidity
 require(to == address(this), "Funds must be coming into FLUX token");
 ```
 Since `ERC777TokensRecipient` can be overriden in ERC-1820 registry we wanted to be 100% certain that the funds are sent to the FLUX smart contract. It shouldn't be possible so why not pay a bit of gas to be 100% sure?
 
-```
+```Solidity
 require(from != to, "Why would FLUX contract send tokens to itself?");
 ````
 Another impossible case is also covered by this check. If FLUX token can only operate as source or destination, why would it be both? 
@@ -254,7 +254,7 @@ New to Solidity 0.6.5, let's take a look at our immutable state variables. We'll
 
 If Ethereum block times change significantly in the future then the entire FLUX smart contract follows suite and the rewards might be accelerated or slowed down accordingly. During our Ropsten testnet beta phase we've experienced 1 minute+ block times.
 
-```
+```Solidity
 /**
  * @dev Set to 5760 on mainnet (min 24 hours before time bonus starts)
  */
@@ -262,7 +262,7 @@ uint256 immutable private _startTimeReward;
 ```
 To start receiving the time bonus (reward of which is capped at 3x a person will need to wait this many blocks). This is set to ~24 hours on mainnet and prvenets users from locking-in Datamine (DAM) tokens for a short duration. Once again, our goal here is incentivized security where we want you to lock-in your tokens for months at a time.
 
-```
+```Solidity
 /**
  * @dev Set to 161280 on mainnet (max 28 days before max 3x time reward bonus)
  */
@@ -270,7 +270,7 @@ uint256 immutable private _maxTimeReward;
 ```
 Used in time reward multiplier math as the maximum reward point. This is set to ~28 days so if you lock-in your DAM tokens for this duration you will receive the maximum 3x time reward bonus.
 
-```
+```Solidity
 /**
  * @dev How long until you can lock-in any DAM token amount
  */
@@ -280,8 +280,10 @@ FLUX Smart Contracts features a failsafe mode. We only let you lock-in 100 DAM f
 
 ## Constructor
 
-```
-constructor(address token, uint256 startTimeReward, uint256 maxTimeReward, uint256 failsafeBlockDuration) public ERC777("FLUX", "FLUX", new address[](0)) {
+```Solidity
+constructor(address token, uint256 startTimeReward, uint256 maxTimeReward, uint256 failsafeBlockDuration) public ERC777("FLUX", "FLUX", new address[](0)) {  
+    require(maxTimeReward > 0, "maxTimeReward must be at least 1 block"); // to avoid division by 0
+
     _token = IERC777(token);
     _startTimeReward = startTimeReward;
     _maxTimeReward = maxTimeReward;
@@ -292,9 +294,40 @@ constructor(address token, uint256 startTimeReward, uint256 maxTimeReward, uint2
 ```
 Here we construct our FLUX token with 0 FLUX premine, assign our immutable state variables and register the contract as an `ERC777TokensRecipient`
 
+**Security Note:** Notice that we are using `block.number.add()` here to find out when failsafe ends (approx 28 days), using OpenZepplin SafeMath.
+**Security Note:** Notice that we are using `require(maxTimeReward > 0)` here to avoid division by 0 for any other smart contracts implementing our contract. This is done to avoid division by 0 and is an extra guard for incorrect Smart Contract deployment.
+
 ## Constants
 
-@todo
+Let's go through constants one by one:
+
+```Solidity
+/**
+ * @dev How much max DAM can you lock-in during failsafe duration?
+ */
+ uint256 private constant _failsafeMaxAmount = 100 * (10 ** 18);
+```
+This is the maximum amount of Datamine (DAM) tokens that can be locked-in to the FLUX smart contract during the failsafe mode. Datamine (DAM) are 18 decimals hence `10 ** 18`. And you can only lock-in 100 DAM during failsafe mode (which lasts ~28 days).
+
+```Solidity
+/**
+ * @dev 0.00000001 FLUX minted/block/1 DAM
+ * @dev 10^18 / 10^8 = 10^10
+ */
+uint256 private constant _mintPerBlockDivisor = 10 ** 8;
+```
+The amount of FLUX that can be minted each block is fixed. This is the number that we divide by at the end of the mint formula. We want 1 DAM (10^18) to mint exactly 00000001 FLUX (10^10).
+
+```Solidity
+/**
+ * @dev To avoid small FLUX/DAM burn ratios we multiply the ratios by this number.
+ */
+uint256 private constant _ratioMultiplier = 10 ** 10;
+```
+Because there are no decimals if amount of burned FLUX is < amount locked-in Datamine (DAM) tokens then we would always get 1x burn multiplier. While this is not going to be a problem in the future (assuming ~8m FLUX is minted per year eventually amount of burned FLUX > locked-in DAM tokens).
+
+
+
 
 ## Contract State Variables
 
