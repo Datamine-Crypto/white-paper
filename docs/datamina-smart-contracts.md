@@ -113,13 +113,39 @@ contract FluxToken is ERC777, IERC777Recipient {
 ```
 Here you will notice something interesting. Flux token is both an `ERC777` contract but also implements `IERC777Recipient`. The reason behind this is discussed in **tokensReceived**.
 
-## SafeMath base
+## Security: SafeMath base
 
 ```
-    /**
-     * @dev Protect against overflows by using safe math operations (these are .add,.sub functions)
-     */
-    using SafeMath for uint256;
+/**
+ * @dev Protect against overflows by using safe math operations (these are .add,.sub functions)
+ */
+using SafeMath for uint256;
  ```
-This is the first line of contract and is an extremely important security feature. We use OpenZepplin SafeMath for all arithmetic operations to avoid [https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow](Integer Overflow and Underflow) attacks.
+This is the first line of contract and is an extremely important security feature. We use OpenZepplin SafeMath for all arithmetic operations to avoid Integer Overflow and Underflow attacks as described here: https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow
+
+## Security: Mutex & Checks-Effects-Interactions Pattern usage
+
+We're over-using a mutex pattern to avoid a form of re-entrancy attacks as described here: https://consensys.github.io/smart-contract-best-practices/known_attacks/#reentrancy
+
+We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#use-the-checks-effects-interactions-pattern) throughout the contract. This is why mutex is over-doing it but we want over-do it on the security in favor of small gas cost increase.
+
+```
+/**
+ * @dev for the re-entrancy attack protection
+ */
+mapping(address => bool) private mutex;
+
+/**
+ * @dev To avoid re-entrancy attacks
+ */
+modifier preventRecursion() {
+    if(mutex[_msgSender()] == false) {
+        mutex[_msgSender()] = true;
+        _; // Call the actual code
+        mutex[_msgSender()] = false;
+    }
+
+    // Don't call the method if you are inside one already (_ above is what does the calling)
+}
+```
 
