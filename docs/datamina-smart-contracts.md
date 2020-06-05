@@ -65,4 +65,61 @@ We're using both Math and SafeMath libraries from OpenZepplin: [https://docs.ope
 
 These are critical security libraries to avoid [Integer Overflow and Underflow](https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow). All math operations such as `.add()`, `.sub()`, `.mul()`, `.div()` are done through the SafeMath library.
 
+## Address Locking
+
+Datamine (DAM) tokens can be locked-in to the FLUX smart contract (by using our two way ERC-777 operator cross-smart contract communication). The locking process is address-specific and is stored in a struct in the following format:
+
+```
+/**
+ * @dev Representation of each DAM Lock-in
+ */
+struct AddressLock {
+    /**
+     * @dev DAM locked-in amount
+     */
+    uint256 amount;
+
+    /**
+     * @dev How much FLUX was burned
+     */
+    uint256 burnedAmount;
+
+    /**
+     * @dev When did the lock-in start
+     */
+    uint256 blockNumber;
+
+    /**
+     * @dev When was the last time this address minted?
+     */
+    uint256 lastMintBlockNumber;
+
+    /**
+     * @dev Who is allowed to mint on behalf of this address
+     */
+    address minterAddress;
+}
+```
+
+Please pay attention to explicit `uin256` types to be in line with OpenZepplin contracts. These structs are stored in a `mapping` as described later in this page.
+
+## Contract Inheritance & Implementations
+
+```
+/**
+ * @dev Datamine Crypto - FLUX Smart Contract
+ */
+contract FluxToken is ERC777, IERC777Recipient {
+```
+Here you will notice something interesting. Flux token is both an `ERC777` contract but also implements `IERC777Recipient`. The reason behind this is discussed in **tokensReceived**.
+
+## SafeMath base
+
+```
+    /**
+     * @dev Protect against overflows by using safe math operations (these are .add,.sub functions)
+     */
+    using SafeMath for uint256;
+ ```
+This is the first line of contract and is an extremely important security feature. We use OpenZepplin SafeMath for all arithmetic operations to avoid [https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow](Integer Overflow and Underflow) attacks.
 
