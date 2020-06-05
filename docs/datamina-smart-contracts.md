@@ -248,8 +248,61 @@ require(from != to, "Why would FLUX contract send tokens to itself?");
 ````
 Another impossible case is also covered by this check. If FLUX token can only operate as source or destination, why would it be both? 
 
+## Security: Immutable State Variables
 
+Let's take a look at the immutable state variables first. We'll be assuming our usual 1 block = 15 seconds for all calculations. This makes our math easy and avoids [https://consensys.github.io/smart-contract-best-practices/known_attacks/#timestamp-dependence](Timestamp Dependence attacks).
 
+If Ethereum block times change significantly in the future then the entire FLUX smart contract follows suite and the rewards might be accelerated or slowed down accordingly. During our Ropsten testnet beta phase we've experienced 1 minute+ block times.
+
+```
+/**
+ * @dev Set to 5760 on mainnet (min 24 hours before time bonus starts)
+ */
+uint256 immutable private _startTimeReward;
+```
+To start receiving the time bonus (reward of which is capped at 3x a person will need to wait this many blocks). This is set to ~24 hours on mainnet and prvenets users from locking-in Datamine (DAM) tokens for a short duration. Once again, our goal here is incentivized security where we want you to lock-in your tokens for months at a time.
+
+```
+/**
+ * @dev Set to 161280 on mainnet (max 28 days before max 3x time reward bonus)
+ */
+uint256 immutable private _maxTimeReward;
+```
+Used in time reward multiplier math as the maximum reward point. This is set to ~28 days so if you lock-in your DAM tokens for this duration you will receive the maximum 3x time reward bonus.
+
+```
+/**
+ * @dev How long until you can lock-in any DAM token amount
+ */
+uint256 immutable private _failsafeTargetBlock;     
+```
+FLUX Smart Contracts features a failsafe mode. We only let you lock-in 100 DAM for 28 days at launch. This is done in accordance with the [Ethereum Fail-Safe Security Best Practice](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#include-a-fail-safe-mode).
+
+## Constructor
+
+```
+constructor(address token, uint256 startTimeReward, uint256 maxTimeReward, uint256 failsafeBlockDuration) public ERC777("FLUX", "FLUX", new address[](0)) {
+    _token = IERC777(token);
+    _startTimeReward = startTimeReward;
+    _maxTimeReward = maxTimeReward;
+    _failsafeTargetBlock = block.number.add(failsafeBlockDuration);
+
+    _erc1820.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+}
+```
+Here we construct our FLUX token with 0 FLUX premine, assign our immutable state variables and register the contract as an `ERC777TokensRecipient`
+
+## Constants
+
+@todo
+
+## Contract State Variables
+
+Now that the contract state and structure is out of the way let's focus on business logic of the FLUX smart contract.
+
+We'll go through each state variables making comments as we go along. State changes are imporant and require extra security considrations.
+
+@todo
 
 
 
