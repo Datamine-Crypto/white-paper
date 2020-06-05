@@ -228,6 +228,28 @@ Over-doing it on security even though amount is a unsigned int, we don't want to
 ```
 require(_msgSender() == address(_token), "You can only lock-in DAM tokens");
 ```
-Thee `_token` here is 
+Ensure that only Datamine (DAM) tokens can be sent to the FLUX smart contract. Reverts any other tokens sent to the FLUX smart contract, which is most likely done by accident by the user. Since the transaction is reverted the user gets the tokens back and is not charged a gas fee.
+
+```
+// Ensure someone doesn't send in some DAM to this contract by mistake (Only the contract itself can send itself DAM)
+require(operator == address(this) , "Only FLUX contract can send itself DAM tokens");
+```
+Since DAM tokens are locked-in to the FLUX smart contract we wanted to avoid users sending tokens to the contract itself. In beginning we considred DAM tokens to be locked-in once they are sent to the FLUX smart contract however this would cause issues if funds were sent from exchange (as the user doesn't have private key to the address that was used).
+
+By performing this one simple check we avoid potential loss of funds down the road. Only the FLUX contract can send itself tokens, quite a clever usage of ERC-777.
+
+```
+require(to == address(this), "Funds must be coming into FLUX token");
+```
+Since `ERC777TokensRecipient` can be overriden in ERC-1820 registry we wanted to be 100% certain that the funds are sent to the FLUX smart contract. It shouldn't be possible so why not pay a bit of gas to be 100% sure?
+
+```
+require(from != to, "Why would FLUX contract send tokens to itself?");
+````
+Another impossible case is also covered by this check. If FLUX token can only operate as source or destination, why would it be both? 
+
+
+
+
 
 
