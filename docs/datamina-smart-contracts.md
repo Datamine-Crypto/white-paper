@@ -51,7 +51,7 @@ We've already included ERC777.sol, why include the interface? FLUX smart contrac
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 ```
-The FLUX token is an ERC-777 token, that also implements `IERC777Recipient`. The reason behind this is discussed in **tokensReceived** section.
+The FLUX token is an ERC-777 token, that also implements `IERC777Recipient`. The reason behind this is discussed in [ERC-1820 ERC777TokensRecipient Implementation](##ERC-1820-ERC777TokensRecipient-Implementation) section.
 
 `IERC1820Registry` is called to register our own `tokensReceived()` implementation. This allows us to control what kinds of tokens can be sent to the FLUX token. There are a few requirements here as discussed in **tokensReceived** section.
 
@@ -186,4 +186,26 @@ modifier requireLocked(address targetAddress, bool requiredState) {
 ```
 This modifier allows us to quickly check if an address has DAM locked-in for a specific address. Since most state changes require this check this is an extremely useful modifier.
 
+## ERC-1820 ERC777TokensRecipient Implementation
 
+```
+/**
+ * @dev Decline some incoming transactions (Only allow FLUX smart contract to send/recieve DAM tokens)
+ */
+function tokensReceived(
+    address operator,
+    address from,
+    address to,
+    uint256 amount,
+    bytes calldata,
+    bytes calldata
+) external override {
+    require(amount > 0, "You must receive a positive number of tokens");
+    require(_msgSender() == address(_token), "You can only lock-in DAM tokens");
+
+    // Ensure someone doesn't send in some DAM to this contract by mistake (Only the contract itself can send itself DAM)
+    require(operator == address(this) , "Only FLUX contract can send itself DAM tokens");
+    require(to == address(this), "Funds must be coming into FLUX token");
+    require(from != to, "Why would FLUX contract send tokens to itself?");
+}
+```
