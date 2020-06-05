@@ -250,7 +250,7 @@ Another impossible case is also covered by this check. If FLUX token can only op
 
 ## Security: Immutable State Variables
 
-Let's take a look at the immutable state variables first. We'll be assuming our usual 1 block = 15 seconds for all calculations. This makes our math easy and avoids [Timestamp Dependence attacks](https://consensys.github.io/smart-contract-best-practices/known_attacks/#timestamp-dependence).
+New to Solidity 0.6.5, let's take a look at our immutable state variables. We'll be assuming our usual 1 block = 15 seconds for all calculations. This makes our math easy and avoids [Timestamp Dependence attacks](https://consensys.github.io/smart-contract-best-practices/known_attacks/#timestamp-dependence).
 
 If Ethereum block times change significantly in the future then the entire FLUX smart contract follows suite and the rewards might be accelerated or slowed down accordingly. During our Ropsten testnet beta phase we've experienced 1 minute+ block times.
 
