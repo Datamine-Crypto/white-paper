@@ -51,9 +51,9 @@ We've already included ERC777.sol, why include the interface? FLUX smart contrac
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 ```
-The FLUX token is an ERC-777 token, that also implements `IERC777Recipient`. The reason behind this is discussed in [ERC-1820 ERC777TokensRecipient Implementation](##ERC-1820-ERC777TokensRecipient-Implementation) section.
+The FLUX token is an ERC-777 token, that also implements `IERC777Recipient`. `IERC1820Registry` is called to register our own `tokensReceived()` implementation. This allows us to control what kinds of tokens can be sent to the FLUX token. 
 
-`IERC1820Registry` is called to register our own `tokensReceived()` implementation. This allows us to control what kinds of tokens can be sent to the FLUX token. There are a few requirements here as discussed in **tokensReceived** section.
+The reason behind both of these decisions is discussed in [ERC-1820 ERC777TokensRecipient Implementation](#erc-1820-erc777tokensrecipient-implementation) section.
 
 
 ```
@@ -111,7 +111,7 @@ Please pay attention to explicit `uin256` types to be in line with OpenZepplin c
  */
 contract FluxToken is ERC777, IERC777Recipient {
 ```
-Here you will notice something interesting. Flux token is both an `ERC777` contract but also implements `IERC777Recipient`. The reason behind this is discussed in **tokensReceived**.
+Here you will notice something interesting. Flux token is both an `ERC777` contract but also implements `IERC777Recipient`. The reason behind this is discussed in [ERC-1820 ERC777TokensRecipient Implementation](#erc-1820-erc777tokensrecipient-implementation) section.
 
 ## Security: SafeMath base
 
@@ -151,9 +151,7 @@ modifier preventRecursion() {
 
 ## Security: Our Modifiers
 
-Once again, we like to over-do it a bit on the security side in favor of gas costs.
-
-Take a look a look at our `preventSameBlock()` modifier: 
+Once again, we like to over-do it a bit on the security side in favor of gas costs. Take a look a look at our `preventSameBlock()` modifier: 
 
 ```
 /**
@@ -186,6 +184,17 @@ modifier requireLocked(address targetAddress, bool requiredState) {
 ```
 This modifier allows us to quickly check if an address has DAM locked-in for a specific address. Since most state changes require this check this is an extremely useful modifier.
 
+## Datamine (DAM) token address
+
+In the FLUX constructor we accept an address for deployed Datamine (DAM) token smart contract address:
+```
+/**
+ * @dev This will be DAM token smart contract address
+ */
+IERC777 immutable private _token;
+```
+Notice the `immutable` keyword, this was introduced in Solidity 0.6.5 and it's a nice security improvement as we know this address won't change somehow later in the contract.
+
 ## ERC-1820 ERC777TokensRecipient Implementation
 
 ```
@@ -209,3 +218,16 @@ function tokensReceived(
     require(from != to, "Why would FLUX contract send tokens to itself?");
 }
 ```
+Our ERC777TokensRecipient implementation is quite unique here. Let's go through this line by line:
+
+```
+require(amount > 0, "You must receive a positive number of tokens");
+```
+Over-doing it on security even though amount is a unsigned int, we don't want to somehow receive 0 tokens.
+
+```
+require(_msgSender() == address(_token), "You can only lock-in DAM tokens");
+```
+Thee `_token` here is 
+
+
