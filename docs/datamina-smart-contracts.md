@@ -389,13 +389,32 @@ uint256 public globalBurnedAmount;
 This number is adjusted by lock/unlock just like `globalLockedAmount` variable but tracks sum of all burned FLUX. Please note that this is the global aggregate of only locked-in DAM addresses. This keeps the smart contract future-proof as the number of DAM locked-in gradually decreases.
 
 
-## Contract State Variables
+## Events
 
-Now that the contract state and structure is out of the way let's focus on business logic of the FLUX smart contract.
+All user interaction that modifies state variables produce events. This is crucial for Datamine Framework analytics as we rely on these events for multiple data points.
 
-We'll go through each state variables making comments as we go along. State changes are imporant and require extra security considrations.
+We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#use-the-checks-effects-interactions-pattern) for events to ensure any external calls are performed at the end and that events occur before these calls.
 
-@todo
+Our events are extra light, if data can be figured out by iterating through previous events we do not send them along with the event (This data can always be viewed or constructed). Let's go through these events one by one:
+
+```Solidity
+event Locked(address sender, uint256 blockNumber, address minterAddress, uint256 amount, uint256 burnedAmountIncrease);
+```
+Occurs when Datamine (DAM) tokens are locked-in to the FLUX smart contract. The properties are as follows:
+
+- **sender**: What address locked-in the DAM tokens?
+- **blockNumber**: On what block number were the funds locked-in? This number is included in the event as there is math that is bassed off this number and we have to be specific to what number was used in the calculations.
+- **amount**: How much DAM was locked-in?
+- **burnedAmountIncrease**: How much did the global burn amount increase by? This is taking the burned amount of the address that locked-in the DAM tokens.
+
+```Solidity
+event Unlocked(address sender, uint256 amount, uint256 burnedAmountDecrease);
+```
+Occurs when Datamine (DAM) tokens are unlcocked from the FLUX smart contract. Note that we don't emit block number of when this was done as it's not used in calculations. The properties are as follows:
+
+- **sender**: What address unlocked the DAM tokens?
+- **amount**: How much DAM was unlocked?
+- **burnedAmountDecrease**: How much did the global burn amount decrease by? This is taking the burned amount of the address that locked-in the DAM tokens.
 
 
 
