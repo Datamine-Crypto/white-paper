@@ -875,4 +875,115 @@ Finally let's look at this formula in detail with the following example:
 = 22500                   // This is divided by 10000 = 2.2500x multiplier
 ```
 
+## Address & Global FLUX Burn Ratios
 
+There are only two view-only functions left to go through. These are the Address and Global FLUX Burn Ratios.
+
+### getAddressRatio()
+
+Let's see how we get the address ratio:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Get DAM/FLUX burn ratio for a specific address
+ */
+function getAddressRatio(address targetAddress) public view returns(uint256) {
+    AddressLock storage targetAddressLock = addressLocks[targetAddress]; // Shortcut accessor
+```
+We accept a target address and return a number for the BURN ratio. This number can be 0 if FLUX was not burned on the targetAddress. We'll also have a shortcut accessor to `targetAddressLock`.
+
+```Solidity
+uint256 addressLockedAmount = targetAddressLock.amount;
+uint256 addressBurnedAmount = targetAddressLock.burnedAmount;
+
+// If you haven't minted or burned anything then you get the default 1x multiplier
+if (addressLockedAmount == 0) {
+    return 0;
+}
+```
+We create two local variables for ease of access and ensure `addressLockedAmount` is not zero to avoid division by zero below.
+
+Finally we get our address ratio:
+
+```Solidity
+// Burn/Lock-in ratios for both address & network
+// Note that we multiply both ratios by the ratio multiplier before dividing. For tiny FLUX/DAM burn ratios.
+uint256 myRatio = addressBurnedAmount.mul(_ratioMultiplier).div(addressLockedAmount);
+return myRatio;
+```
+The formula is quite simple and `.mul(_ratioMultiplier)` ensures we handle cases where less FLUX is burned than total DAM locked-in tokens. See [Constants Section](#constants) for more details.
+ 
+### getGlobalRatio()
+
+Let's take a look at the final public view-only function:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Get DAM/FLUX burn ratio for global (entire network)
+ */
+function getGlobalRatio() public view returns(uint256) {
+    // If you haven't minted or burned anything then you get the default 1x multiplier
+    if (globalLockedAmount == 0) {
+        return 0;
+    }
+```
+There are no arguments, and we ensure `globalLockedAmount` is not zero to avoid division by zero. Finally the global ratio is calculated in similar fashion as the `getAddressRatio()` above:
+
+```Solidity
+// Burn/Lock-in ratios for both address & network
+// Note that we multiply both ratios by the ratio multiplier before dividing. For tiny FLUX/DAM burn ratios.
+uint256 globalRatio = globalBurnedAmount.mul(_ratioMultiplier).div(globalLockedAmount);
+return globalRatio;
+```
+The formula is quite simple and `.mul(_ratioMultiplier)` ensures we handle cases where less FLUX is burned than total DAM locked-in tokens. See [Constants Section](#constants) for more details.
+
+## Data Aggregation Helper Functions
+
+In the contract you will also find two view-only functions:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Grab a collection of data
+ * @dev ABIEncoderV2 was still experimental at time of writing this. Better approach would be to return struct.
+ */
+function getAddressDetails(address targetAddress) public view returns(uint256,uint256,uint256,uint256,uint256,uint256,uint256) {
+    uint256 fluxBalance = balanceOf(targetAddress);
+    uint256 mintAmount = getMintAmount(targetAddress, block.number);
+
+    uint256 addressTimeMultiplier = getAddressTimeMultiplier(targetAddress);
+    uint256 addressBurnMultiplier = getAddressBurnMultiplier(targetAddress);
+
+    return (
+        block.number, 
+        fluxBalance, 
+        mintAmount, 
+        addressTimeMultiplier,
+        addressBurnMultiplier,
+        globalLockedAmount, 
+        globalBurnedAmount);
+}
+
+/**
+ * @dev PUBLIC FACING: Grab additional token details
+ * @dev ABIEncoderV2 was still experimental at time of writing this. Better approach would be to return struct.
+ */
+function getAddressTokenDetails(address targetAddress) public view returns(uint256,bool,uint256,uint256,uint256) {
+    bool isFluxOperator = IERC777(_token).isOperatorFor(address(this), targetAddress);
+    uint256 damBalance = IERC777(_token).balanceOf(targetAddress);
+
+    uint256 myRatio = getAddressRatio(targetAddress);
+    uint256 globalRatio = getGlobalRatio();
+
+    return (
+        block.number, 
+        isFluxOperator, 
+        damBalance,
+        myRatio,
+        globalRatio);
+}
+```
+These functions fetch a number of data points and consolidate them as multiple function returns. This is done to reduce number of smart contract network calls and to fetch the data we need on the Dashboard.
+
+These functions are not used anywhere in the contract and are only there to provide a quick form of data aggregation. We do not use these functions in the Datamine Framework.
+
+Additionally `ABIEncoderV2` was still in experimental mode so we did not use it and instead simply return multiple values. Due to the limited number of memory variables in Ethereum this data aggregation had to be split into two seprate functions.
