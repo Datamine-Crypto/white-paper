@@ -324,7 +324,7 @@ The amount of FLUX that can be minted each block is fixed. This is the number th
  */
 uint256 private constant _ratioMultiplier = 10 ** 10;
 ```
-Because there are no decimals if amount of burned FLUX is < amount locked-in Datamine (DAM) tokens then we would always get 1x burn multiplier. While this is not going to be a problem in the future (assuming ~8m FLUX is minted per year eventually amount of burned FLUX > locked-in DAM tokens).
+Because there are no decimals if amount of burned FLUX is < amount locked-in Datamine (DAM) tokens then we would always get 1x burn multiplier. While this is not going to be a problem in the future (assuming ~8m FLUX is minted per year eventually amount of burned FLUX > locked-in DAM tokens) we wanted to make sure the formula would still be rewarding during early stages of mainnet launch.
 
 ```Solidity
 /**
@@ -358,6 +358,34 @@ You can get up to 3x DAM lock-in time multiplier. This number is divided by `_pe
 uint256 private constant  _targetBlockMultiplier = 20000;
 ```
 To get to the 3x time bonus we will be starting from 0 and gradually going up to 2x (`_targetBlockMultiplier/_percentMultiplier`). This number would only start to go up after `startTimeReward` # of blocks elapsed.
+
+## Public State Variables
+
+Here we will cover the logic of the FLUX smart contract and the contract's state variables. Here we must pay extra attention to security as these are the mutable variables. These variables are also marked as PUBLIC FACING for both ability to read their values in ABIs on our dashboard.
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: By making addressLocks public we can access elements through the contract view (vs having to create methods)
+ */
+mapping (address => AddressLock) public addressLocks;
+```
+This is the most important state variable. Here we specify state of each DAM lock-in address. The struct itself is explained in detail in [Address Locking Section](#address-locking). By using a struct for all address states we can greatly simplify our business logic and it's great that Solidity supports structs.
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Store how much locked in DAM there is globally
+ */
+uint256 public globalLockedAmount;
+```
+Whenever some locks-in some Datamine (DAM) tokens they will be added to this number. This number will also be effected when an address unlockes their DAM tokens back.
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Store how much is burned globally (only from the locked-in DAM addresses)
+ */
+uint256 public globalBurnedAmount;
+```
+This number is adjusted by lock/unlock just like `globalLockedAmount` variable but tracks sum of all burned FLUX. Please note that this is the global aggregate of only locked-in DAM addresses. This keeps the smart contract future-proof as the number of DAM locked-in gradually decreases.
 
 
 ## Contract State Variables
