@@ -12,11 +12,11 @@ DAM and FLUX tokens were written in Solidity. Be sure to check out their tutoria
 
 Our Smart Contracts are based on secure and trusted [OpenZepplin ERC-777 Smart Contract](https://docs.openzeppelin.com/contracts/2.x/api/token/erc777)
 
-OpenZepplin code is at the heart of our tokens and we follow their security practices and implementation very carfully.
+OpenZepplin code is at the heart of our tokens and we follow their security practices and implementation very carefully.
 
 # Datamine (DAM) Token
 
-For the base Datamine (DAM) token we've kept it as simple and basic as possible. This token is a standard ERC-777 implementation and was deployed on Ethereum mainnet with fixed supply of 25,000,000 DAM.
+For the base Datamine (DAM) token we've kept it as simple and basic as possible. This token is a standard ERC-777 implementation and was deployed on Ethereum mainnet with fixed supply of 25,000,000 DAM. We'll have the final amount of burned DAM tokens after the BWK coin -> DAM token is complete.
 
 All extensions on the base tokens are done through the new ERC-777 "Operators". This feature allows other ethereum addresses to operate on behalf of your account. Instead of another address, we've used this functionality to grant another smart contract operator role. 
 
@@ -299,7 +299,7 @@ Here we construct our FLUX token with 0 FLUX premine, assign our immutable state
 
 ## Constants
 
-Let's go through constants one by one:
+All of our constants are private and are hardcoded at time of smart contract creation. Let's go through constants one by one:
 
 ```Solidity
 /**
@@ -326,7 +326,38 @@ uint256 private constant _ratioMultiplier = 10 ** 10;
 ```
 Because there are no decimals if amount of burned FLUX is < amount locked-in Datamine (DAM) tokens then we would always get 1x burn multiplier. While this is not going to be a problem in the future (assuming ~8m FLUX is minted per year eventually amount of burned FLUX > locked-in DAM tokens).
 
+```Solidity
+/**
+ * @dev To get 4 decimals on our multipliers we'll multiply all ratios & divide ratios by this number.
+ * @dev This is done because we're using integers without any decimals.
+ */
+uint256 private constant _percentMultiplier = 10000;
+```
+Both time and burn multipliers have 4 decimal precision. Because we're using only integers we can't actually get decimals. So we always use this as base "1.0000x" multiplier. This means ratios are always multiplied by this number.
 
+```Solidity
+/**
+ * @dev This is our max 10x FLUX burn multiplier. It's multiplicative with the time multiplier.
+ */
+uint256 private constant _maxBurnMultiplier = 100000;
+```
+You can burn FLUX to get up to 10x burn multiplier. This is that number and is used in the minting formula. This number is divided by `_percentMultiplier` consant.
+
+```Solidity
+/**
+ * @dev This is our max 3x DAM lock-in time multiplier. It's multiplicative with the burn multiplier.
+ */
+uint256 private constant _maxTimeMultiplier = 30000;
+```
+You can get up to 3x DAM lock-in time multiplier. This number is divided by `_percentMultiplier` consant.
+
+```Solidity
+/**
+ * @dev How does time reward bonus scales? This is the "2x" in the "1x base + (0x to 2x bonus) = max 3x"
+ */
+uint256 private constant  _targetBlockMultiplier = 20000;
+```
+To get to the 3x time bonus we will be starting from 0 and gradually going up to 2x (`_targetBlockMultiplier/_percentMultiplier`). This number would only start to go up after `startTimeReward` # of blocks elapsed.
 
 
 ## Contract State Variables
