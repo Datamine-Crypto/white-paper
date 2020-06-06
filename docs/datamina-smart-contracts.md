@@ -437,4 +437,46 @@ Occurs when FLUX tokens are minted by the delegated minter.
 - **targetBlock**: Up to what block are we minting? This works for partial minting as you can mint up to a specific block (without minting your entire outstanding FLUX balance).
 - **amount**: How much FLUX was minted?
 
+## Public State Modifying Functions
+
+Let's now go through the core actionable functions. These are the functions that perform all of the interactive state changes such as locking, unlocking, burning and minting of FLUX.
+
+### lock()
+
+Let's take a look at how Datamine (DAM) tokens get locked-in to the FLUX smart contract.
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Lock-in DAM tokens with the specified address as the minter.
+ */
+function lock(address minterAddress, uint256 amount) 
+    preventRecursion 
+    preventSameBlock(_msgSender())
+    requireLocked(_msgSender(), false) // Ensure DAM is unlocked for sender
+public {
+```
+
+- **minterAddress**: Who do we want the target minter to be?
+- **amount**: How much Datamine (DAM) tokens are we locking in?
+- **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
+- **preventSameBlock modifier**: We don't want the message sender address that is performing an action to be able to execute multiple actions within the same block. This avoids potential forms of [transaction spamming](#security-our-modifiers).
+- **requireLocked modifier**: When calling `lock()` function make sure that current message sender does not have Datamine (DAM) tokens locked-in their address. To keep things simple there are only two states to addresses: "locked/unlocked".
+
+Let's go through the function body:
+
+```Solidity
+require(amount > 0, "You must provide a positive amount to lock-in");
+```
+We don't want users locking in 0 DAM tokens. Since we're using unsigned integers this could also be written as `amount != 0`
+
+```Solidity
+// Ensure you can only lock up to 100 DAM during failsafe period
+if (block.number < _failsafeTargetBlock) {
+    require(amount <= _failsafeMaxAmount, "You can only lock-in up to 100 DAM during failsafe.");
+}
+```
+
+
+
+
 
