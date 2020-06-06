@@ -987,3 +987,60 @@ These functions fetch a number of data points and consolidate them as multiple f
 These functions are not used anywhere in the contract and are only there to provide a quick form of data aggregation. We do not use these functions in the Datamine Framework.
 
 Additionally `ABIEncoderV2` was still in experimental mode so we did not use it and instead simply return multiple values. Due to the limited number of memory variables in Ethereum this data aggregation had to be split into two seprate functions.
+
+## Additional Security Considerations (ConsenSys)
+
+Here we'll go through a quick checklist of Best Security Practices, known attacks and various steps we took to ensure the contract is secure. Be sure to follow along: [Ethereum Smart Contract Security Best Practices
+](https://consensys.github.io/smart-contract-best-practices/)
+
+### General Philosophy
+
+Let's go through the main points on-by-one:
+
+#### Prepare for failure
+
+We have a fail-safe where you can only lock-in 100 Datamine (DAM) tokens for 28 days. This will allow us to pull the smart contract and re-deploy a new version and refund any users. Depending on the serverity of the exploit it is possible the users could simply unlock their tokens from the old contract if it comes to that.
+
+We are also launching with 50,000 Datamine (DAM) token bug bounty. With this techinical whitepaper we believe there is enough for a seasoned security expert to review.
+
+Since we control the Datamine website & dashboard we can always release a new smart contract seamlessly so the upgrade path is clear.
+
+#### Rollout carefully
+
+We've been testing testing on Ropsten Testnet for almost a month with a variety of smart contract parameters. We also go through a number of attack vectors in this whitepaper so a lot of research was done on best practices.
+
+We decided not to release the FLUX smart contract source code in Testnet due to being first-to-market and the continuous changes throughout the testnet. The source code for FLUX smart contract is planned to be launched at time of Datamine (DAM) token swap on Graviex exchange.
+
+#### Keep contracts simple
+
+We've split up the smart contract into multiple easy-to-understand constants, immutable variables and functions. There were some ideas that were scrapped to keep the contract as simple as possible but powerful enough to provide new features like Delegated Minting, FLUX target-burning and partial minting.
+
+We've chosen the best security base possible at time of writing FLUX smart contract: OpenZepplin. We've used their entire product line including unit testing and Smart Contract libraries.
+
+We also chose to split up all logic and prefer clear variable names instead of reducing lines of code. Overdoing it on require checks in favor of improved errors instead of relying on SafeMath overflow protection in places. Everything is well documented and we go through the entire smart contract in detail in this whitepaper.
+
+#### Stay up to date
+
+We're using the latest Solidity v0.6.9 which was released only days prior to the mainnet launch. We've also used the latest OpenZepplin available smart contracts.
+
+#### Be aware of blockchain properties
+
+All of our math is based off block numbers as opposed to timestamps to avoid [Timestamp Dependance](https://consensys.github.io/smart-contract-best-practices/recommendations/#timestamp-dependence).
+
+We use [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) for all state modifications.
+
+#### Fundamental Tradeoffs: Simplicity versus Complexity cases
+
+Through use of clever modifiers and constants we've kept the code base clean. There is a clear sepration of header, state modification and view-only functions. 
+
+By only having two states "locked" or "unlocked" all of the logic is greatly simplified. We've also saved a lot of unnecessary checks by limiting actions to one per block per address.
+
+### Secure Development Recommendations
+
+#### External Calls
+
+##### Use caution when making external calls
+We follow [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) pattern for any logic and they're always done at the end of the function.
+
+##### Mark untrusted contracts
+All external calls are marked with `[RE-ENTRANCY WARNING]  external call, must be at the end` to clearly mark these functions.
