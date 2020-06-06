@@ -824,6 +824,55 @@ Using SafeMath helper library ensure we don't exceed 30000 time bonus multiplier
 = 22400                   // This is divided by 10000 = 2.2400x multiplier
 ```
 
+### getAddressBurnMultiplier()
 
+
+Let's take a look at how FLUX burning bonus works:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Get burn multipler for a specific address. This will be returned as PERCENT (10000x)
+ */
+function getAddressBurnMultiplier(address targetAddress) public view returns(uint256) {
+```
+We can specify any address (even if it doesn't have Datamine (DAM) tokens locked-in). If there are no DAM tokens locked-in 10000 (1.0000x multiplier) will be returned.
+
+Now let's take a look at how we fetch address & global ratios:
+
+```Solidity
+uint256 myRatio = getAddressRatio(targetAddress);
+uint256 globalRatio = getGlobalRatio();
+
+// Avoid division by 0 & ensure 1x multiplier if nothing is locked
+if (globalRatio == 0 || myRatio == 0) {
+    return _percentMultiplier;
+}
+```
+If either of these ratios return 0 then return the default 10000 (1.0000x multiplier). These functions are detailed in later sections.
+
+Finally we use the ratios in the following formula:
+
+```Solidity
+// The final multiplier is return with 10000x multiplication and will need to be divided by 10000 for final number
+uint256 burnMultiplier = Math.min(_maxBurnMultiplier, myRatio.mul(_percentMultiplier).div(globalRatio).add(_percentMultiplier)); // Min 1x, Max 10x
+return burnMultiplier;
+```
+Here the SafeMath helper ensures we never exceed `_maxBurnMultiplier` (1000000 = 10.0000x). 
+
+We take address ratio, multiply it by 10000 and divide it by global ratio and add 10000. That means to get the maximum burn multiplier bonus the address must burn 9x the global average (think `Math.min(10, 9 + 1)`)
+
+Finally let's look at this formula in detail with the following example:
+
+- Address ratio: 20000 (2.0000x)
+- Global ratio: 16000 (1.6000x)
+
+```Solidity
+(20000)                   // myRatio
+.mul(10000)               // .mul(_percentMultiplier)
+.div(16000)               // .div(globalRatio)
+.add(10000)               // .add(_percentMultiplier)
+
+= 22500                   // This is divided by 10000 = 2.2500x multiplier
+```
 
 
