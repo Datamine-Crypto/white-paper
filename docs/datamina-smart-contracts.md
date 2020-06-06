@@ -6,7 +6,7 @@ Our smart Contracts are ERC-777, ERC-20 Compatble. For Techincal Details on ERC-
 
 We won't be going through all of the fantastic ERC-777 features nor the ERC-20 features on this page and instead focus purely on our smart contract implementation.
 
-DAM and FLUX tokens were written in Solidity. Be sure to check out their tutorial before jumping into code: [https://solidity.readthedocs.io/en/v0.4.24/introduction-to-smart-contracts.html](https://solidity.readthedocs.io/en/v0.4.24/introduction-to-smart-contracts.html)
+DAM and FLUX tokens were written in Solidity. Be sure to check out their tutorial before jumping into code: [https://solidity.readthedocs.io/en/v0.6.9/introduction-to-smart-contracts.html](https://solidity.readthedocs.io/en/v0.6.9/introduction-to-smart-contracts.html)
 
 ## OpenZepplin - The secure implementation layer
 
@@ -400,7 +400,7 @@ Our events are extra light, if data can be figured out by iterating through prev
 ```Solidity
 event Locked(address sender, uint256 blockNumber, address minterAddress, uint256 amount, uint256 burnedAmountIncrease);
 ```
-Occurs when Datamine (DAM) tokens are locked-in to the FLUX smart contract. The properties are as follows:
+Occurs when Datamine (DAM) tokens are locked-in to the FLUX smart contract.
 
 - **sender**: What address locked-in the DAM tokens?
 - **blockNumber**: On what block number were the funds locked-in? This number is included in the event as there is math that is bassed off this number and we have to be specific to what number was used in the calculations.
@@ -410,11 +410,31 @@ Occurs when Datamine (DAM) tokens are locked-in to the FLUX smart contract. The 
 ```Solidity
 event Unlocked(address sender, uint256 amount, uint256 burnedAmountDecrease);
 ```
-Occurs when Datamine (DAM) tokens are unlcocked from the FLUX smart contract. Note that we don't emit block number of when this was done as it's not used in calculations. The properties are as follows:
+Occurs when Datamine (DAM) tokens are unlocked from the FLUX smart contract. Note that we don't emit block number of when this was done as it's not used in calculations.
 
 - **sender**: What address unlocked the DAM tokens?
 - **amount**: How much DAM was unlocked?
 - **burnedAmountDecrease**: How much did the global burn amount decrease by? This is taking the burned amount of the address that locked-in the DAM tokens.
 
+```Solidity
+event BurnedToAddress(address sender, address targetAddress, uint256 amount);
+```
+Occurs when FLUX tokens are burned to an address with DAM locked-in tokens.
+
+- **sender**: What address burned the FLUX tokens?
+- **targetAddress**: To what address did they burn FLUX tokens?
+- **amount**: How much FLUX was burned to this target address?
+
+```Solidity
+event Minted(address sender, uint256 blockNumber, address sourceAddress, address targetAddress, uint256 targetBlock, uint256 amount);
+```
+Occurs when FLUX tokens are minted by the delegated minter. 
+
+- **sender**: What is the address of the delegated minter?
+- **blockNumber**: What block number did this mint occur on? This is important for math calculations, need to be precise here.
+- **sourceAddress**: From what address are we minting from? The minted amount will be based on this address and the sender must be the delegated minter for this address.
+- **targetAddress**: What address are we minting this FLUX to? (The recipient of the mint)
+- **targetBlock**: Up to what block are we minting? This works for partial minting as you can mint up to a specific block (without minting your entire outstanding FLUX balance).
+- **amount**: How much FLUX was minted?
 
 
