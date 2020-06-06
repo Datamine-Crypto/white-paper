@@ -127,7 +127,7 @@ This is the first line of contract and is an extremely important security featur
 
 We're over-using a mutex pattern to avoid a form of re-entrancy attacks as described here: https://consensys.github.io/smart-contract-best-practices/known_attacks/#reentrancy
 
-We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#use-the-checks-effects-interactions-pattern) throughout the contract. This is why mutex is over-doing it but we want over-do it on the security in favor of small gas cost increase.
+We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) throughout the contract. This is why mutex is over-doing it but we want over-do it on the security in favor of small gas cost increase.
 
 ```Solidity
 /**
@@ -276,7 +276,7 @@ Used in time reward multiplier math as the maximum reward point. This is set to 
  */
 uint256 immutable private _failsafeTargetBlock;     
 ```
-FLUX Smart Contracts features a failsafe mode. We only let you lock-in 100 DAM for 28 days at launch. This is done in accordance with the [Ethereum Fail-Safe Security Best Practice](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#include-a-fail-safe-mode).
+FLUX Smart Contracts features a failsafe mode. We only let you lock-in 100 DAM for 28 days at launch. This is done in accordance with the [Ethereum Fail-Safe Security Best Practice](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#include-a-fail-safe-mode).
 
 ## Constructor
 
@@ -393,7 +393,7 @@ This number is adjusted by lock/unlock just like `globalLockedAmount` variable b
 
 All user interaction that modifies state variables produce events. This is crucial for Datamine Framework analytics as we rely on these events for multiple data points.
 
-We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.8/security-considerations.html#use-the-checks-effects-interactions-pattern) for events to ensure any external calls are performed at the end and that events occur before these calls.
+We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) for events to ensure any external calls are performed at the end and that events occur before these calls.
 
 Our events are extra light, if data can be figured out by iterating through previous events we do not send them along with the event (This data can always be viewed or constructed). Let's go through these events one by one:
 
@@ -475,6 +475,39 @@ if (block.number < _failsafeTargetBlock) {
     require(amount <= _failsafeMaxAmount, "You can only lock-in up to 100 DAM during failsafe.");
 }
 ```
+During our fail-safe mode (Based on [Ethereum Fail-Safe Security Best Practice](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#include-a-fail-safe-mode)) we don't want addresses to lock-in more than `_failsafeMaxAmount` which is 100 DAM (10^18) at launch. This allows us to pull smart contract for 28 days in case of an issue.
+
+```Solidity
+AddressLock storage senderAddressLock = addressLocks[_msgSender()]; // Shortcut accessor
+```
+You will notice this common pattern for a mapping value reference in many FLUX smart contract functions. This allows us to use `senderAddressLock` instead of `addressLocks[_msgSender()]` while accessing struct. You can read more about it here: https://solidity.readthedocs.io/en/v0.6.9/types.html#structs
+
+```Solidity
+senderAddressLock.amount = amount;
+senderAddressLock.blockNumber = block.number;
+senderAddressLock.lastMintBlockNumber = block.number; // Reset the last mint height to new lock height
+senderAddressLock.minterAddress = minterAddress;
+```
+Here we are storing DAM lock-in amount, block number of when the sender called the function and saving the delegated minter address into the struct. Notice we also reset `lastMintBlockNumber` to the same block as the DAM lock-in.
+
+```Solidity
+globalLockedAmount = globalLockedAmount.add(amount);
+globalBurnedAmount = globalBurnedAmount.add(senderAddressLock.burnedAmount);
+```
+We will now emit our state change event:
+
+```Solidity
+emit Locked(_msgSender(), block.number, minterAddress, amount, senderAddressLock.burnedAmount);
+```
+Emit that DAM was locked-in by the message sender on this block with the delegated minter. You can read more about this event in our [Events Section](#events)
+
+```Solidity
+// Send [amount] of DAM token from the address that is calling this function to FLUX smart contract.
+IERC777(_token).operatorSend(_msgSender(), address(this), amount, "", ""); // [RE-ENTRANCY WARNING] external call, must be at the end
+```
+Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the new ERC-777 Operators to move DAM tokens (by the FLUX smart contract) into the FLUX smart contract itself. The amount comes from function.
+
+**Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `operatorSend()` function.
 
 
 
