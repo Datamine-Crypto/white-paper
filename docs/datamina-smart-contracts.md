@@ -26,7 +26,7 @@ This means that we can write additional smart contracts to extend base functiona
 
 Let's go over the FLUX smart contract in detail skipping the entire OpenZepplin ERC-777 base implementation and focusing only on the FLUX implementation.
 
-Let's jump right into the FLUX smart contract code. We'll go through code in logical blocks.
+The FLUX smart contract drives the business logic of Datamine, it's important that our business logic is open for the rest of the world to see. Let's jump right into the FLUX smart contract code. We'll go through code in logical blocks.
 
 ## Libraries & Interfaces
 
@@ -669,5 +669,69 @@ Emit that FLUX was minted by the message sender on the current block number from
 Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the ERC-777 `_mint()` function to finally mint the outstanding FLUX amount to the target address.
 
 **Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the ERC-777 `_mint()` function.
+
+## Public View-Only Functions
+
+In this section there are no state changes so these functions are all view-only and don't cost any gas to call. We use these public functions to fetch smart contract data on our Dashboard. Here you will find all of the mathematics behind our logic.
+
+### getMintAmount()
+
+Let's take a look at how we calculate how much FLUX to mint for an address that has Datamine (DAM) tokens locked-in. The returned number is the total amount of FLUX that would be minted if the current address performs a mint:
+
+```Solidity
+/**
+* @dev PUBLIC FACING: Get mint amount of a specific amount up to a target block
+*/
+function getMintAmount(address targetAddress, uint256 targetBlock) public view returns(uint256) {
+```
+
+- **targetAddress:** To figure out how much is being minted we require a target address and target block. This target address must have some Datamine (DAM) tokens locked.
+- **targetBlock:** We can perform partial mints by specifying a target block some time after the DAM lock-in block number. The target block can not exceed current block.
+
+```Solidity
+// Ensure this address has DAM locked-in
+if (targetAddressLock.amount == 0) {
+    return 0;
+}
+```
+This is similar to `requireLocked()` modifier in terms of logic. However if the address doesn't have any Datamine (DAM) tokens locked- in return 0 instead of reverting.
+
+```Solidity
+require(targetBlock <= block.number, "You can only calculate up to current block");
+```
+We don't want to specify a block in the future. If you are trying to use this function for a form of mint forecasting please use Datamine framework as it has built in forecasting and analytics for smart contracts.
+
+```Solidity
+require(targetAddressLock.lastMintBlockNumber <= targetBlock, "You can only specify blocks at or ahead of last mint block");
+```
+We want to ensure that you can't specify an address BEFORE your lock-in period (as this would an overflow revert. Instead there is a more descriptive error message.
+
+### Minted Amount Logic
+
+Let's look into how the actual mint amount is calculated inside `getMintAmount()` function:
+
+```Soliditiy
+uint256 blocksMinted = targetBlock.sub(targetAddressLock.lastMintBlockNumber);
+```
+Using SafeMath, how many blocks passed since the last mint (DAM lock-in is the default date for this until a mint occurs)?
+
+```Solidity
+uint256 amount = targetAddressLock.amount; // Total of locked-in DAM for this address
+uint256 blocksMintedByAmount = amount.mul(blocksMinted);
+```
+How much Datamine (DAM) tokens are locked in? Take the number of blocks that passed since last mint and multiply them by the amount of DAM locked-in tokens.
+
+Next we take our multipliers:
+
+```Solidity
+// Adjust by multipliers
+uint256 burnMultiplier = getAddressBurnMultiplier(targetAddress);
+uint256 timeMultipler = getAddressTimeMultiplier(targetAddress);
+```
+At 1.0000x multiplier, these will be returned as 10000. You can read up more on multipliers in [Constants Section](#constants)
+
+
+
+
 
 
