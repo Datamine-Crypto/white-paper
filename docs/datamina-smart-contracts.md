@@ -757,10 +757,73 @@ The divsor gets us to our expected `0.00000001 FLUX minted/block/1 DAM` fromula.
 .div(10000)               // .div(_percentMultiplier)
 .div(10^8)                // .div(_mintPerBlockDivisor)
 
-=
-
-713250000000000           //(0.00071325 FLUX as 1 FLUX = 10^18)
+= 713250000000000         //(0.00071325 FLUX as 1 FLUX = 10^18)
 ```
+
+### getAddressTimeMultiplier()
+
+Let's take a look at how Datamine (DAM) lock-in time bonus works:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Find out the current address DAM lock-in time bonus (Using 1 block = 15 sec formula)
+ */
+function getAddressTimeMultiplier(address targetAddress) public view returns(uint256) {
+
+AddressLock storage targetAddressLock = addressLocks[targetAddress]; // Shortcut accessor
+```
+The function accepts a target address who has the DAM locked-in amount. Notice we also get the address lock details of the address we are targeting. The returned value of this function will be the time multiplier where 1.0000x = 10000.
+
+```Solidity
+// Ensure this address has DAM locked-in
+if (targetAddressLock.amount == 0) {
+    return _percentMultiplier;
+}
+```
+This is similar to `requireLocked()` modifier in terms of logic. However if the address doesn't have any Datamine (DAM) tokens locked- in return 10000 instead of reverting.
+
+```Solidity
+// You don't get any bonus until min blocks passed
+uint256 targetBlockNumber = targetAddressLock.blockNumber.add(_startTimeReward);
+if (block.number < targetBlockNumber) {
+    return _percentMultiplier;
+}
+```
+This is how we handle our "min 24 hour" Datamine (DAM) lock-in period. `_startTimeReward` is provided at time of FLUX construction so it can be changed easily in unit tests. If the 24 hours has not passed yet return 10000 (1.0000x time multiplier).
+
+Next let's take a look at how the actual multiplier is calculated:
+
+```Soliditiy
+// 24 hours - min before starting to receive rewards
+// 28 days - max for waiting 28 days (The function returns PERCENT (10000x) the multiplier for 4 decimal accuracy
+uint256 blockDiff = block.number.sub(targetBlockNumber).mul(_targetBlockMultiplier).div(_maxTimeReward).add(_percentMultiplier); 
+```
+
+- `block.number.sub(targetBlockNumber)` would give us the number of blocks that passed since 24 min lock-in period. 
+- `.mul(_targetBlockMultiplier)` multiply the difference in blocks by 20000.
+- `.div(_maxTimeReward)` divide the number by the destination number of blocks (28 days = 161280 blocks)
+- `.add(_percentMultiplier)` add 10000 (1.0000x multiplier) to the total
+
+We then finally return the time multiplier:
+
+```Solidity
+uint256 timeMultiplier = Math.min(_maxTimeMultiplier, blockDiff); // Min 1x, Max 3x
+return timeMultiplier;
+```
+Using SafeMath helper library ensure we don't exceed 30000 time bonus multiplier. Let's look at an example of the full formula:
+
+- Datamine (DAM) lock-in block: 1
+- Current block: 100001
+
+```Solidity
+(100001 - 1)              // block.number.sub(targetBlockNumber)
+.mul(20000)               // .mul(_targetBlockMultiplier)
+.div(161280)              // .div(_maxTimeReward)
+.add(10000)               // .add(_percentMultiplier)
+
+= 22400                   // This is divided by 10000 = 2.2400x multiplier
+```
+
 
 
 
