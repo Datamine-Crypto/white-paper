@@ -730,8 +730,37 @@ uint256 timeMultipler = getAddressTimeMultiplier(targetAddress);
 ```
 At 1.0000x multiplier, these will be returned as 10000. You can read up more on multipliers in [Constants Section](#constants)
 
+```Solidity
+uint256 fluxAfterMultiplier = blocksMintedByAmount.mul(burnMultiplier).div(_percentMultiplier).mul(timeMultipler).div(_percentMultiplier);
+```
+Modify the `amount * blocksMinted` by multipliers. This would return the same amount as `blocksMintedByAmount` if both multipliers are at 1.0000x.
 
+Finally we must take the multiplied number and divide it by how much FLUX mint divisor:
 
+```Solidity
+uint256 actualFluxMinted = fluxAfterMultiplier.div(_mintPerBlockDivisor);
+return actualFluxMinted;
+```
+
+The divsor gets us to our expected `0.00000001 FLUX minted/block/1 DAM` fromula. To explain this divsor, let's assume the following condition:
+
+- 30.0 DAM locked-in
+- For 150 blocks
+- 2.5000x FLUX burn multiplier
+- 6.3400x DAM lock-in time bonus multiplier
+
+```Solidity
+((30 * 10^18) * 150)      // amount.mul(blocksMinted) = blocksMintedByAmount
+.mul(25000)               // .mul(burnMultiplier)
+.div(10000)               // .div(_percentMultiplier)
+.mul(63400)               // .mul(timeMultipler)
+.div(10000)               // .div(_percentMultiplier)
+.div(10^8)                // .div(_mintPerBlockDivisor)
+
+=
+
+713250000000000           //(0.00071325 FLUX as 1 FLUX = 10^18)
+```
 
 
 
