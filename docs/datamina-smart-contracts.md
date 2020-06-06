@@ -460,7 +460,7 @@ public {
 - **amount**: How much Datamine (DAM) tokens are we locking in?
 - **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
 - **preventSameBlock modifier**: We don't want the message sender address that is performing an action to be able to execute multiple actions within the same block. This avoids potential forms of [transaction spamming](#security-our-modifiers).
-- **requireLocked modifier**: When calling `lock()` function make sure that current message sender does not have Datamine (DAM) tokens locked-in their address. To keep things simple there are only two states to addresses: "locked/unlocked".
+- **requireLocked modifier**: When calling `lock()` function make sure that current message sender does not have Datamine (DAM) tokens locked-in their address (it is UNLOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
 
 Let's go through the function body:
 
@@ -509,7 +509,49 @@ Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://soli
 
 **Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `operatorSend()` function.
 
+### unlock()
 
+You can always choose to unlock your Datamine (DAM) lock-in tokens to get 100% of your DAM tokens back. This is an extremly useful feature and it's done in a completey secure and decentralized manner.
 
+```Solidity
+function unlock() 
+    preventRecursion 
+    preventSameBlock(_msgSender())
+    requireLocked(_msgSender(), true)  // Ensure DAM is locked-in for sender
+public {
+```
+- **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
+- **preventSameBlock modifier**: We don't want the message sender address that is performing an action to be able to execute multiple actions within the same block. This avoids potential forms of [transaction spamming](#security-our-modifiers).
+- **requireLocked modifier**: When calling `unlock()` function make sure that current message sender has at least some Datamine (DAM) tokens locked-in their address (it is LOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
 
+```Solidity
+AddressLock storage senderAddressLock = addressLocks[_msgSender()]; // Shortcut accessor
+```
+You will notice this common pattern for a mapping value reference in many FLUX smart contract functions. This allows us to use `senderAddressLock` instead of `addressLocks[_msgSender()]` while accessing struct. You can read more about it here: https://solidity.readthedocs.io/en/v0.6.9/types.html#structs
 
+```Solidity
+uint256 amount = senderAddressLock.amount;
+senderAddressLock.amount = 0;
+```
+A secure amount -> 0 swap so we stop referring to the `senderAddressLock.amount` later in the function as we want to avoid any type of re-entrancy.
+
+```Solidity
+globalLockedAmount = globalLockedAmount.sub(amount);
+globalBurnedAmount = globalBurnedAmount.sub(senderAddressLock.burnedAmount);
+```
+When unlocking Datamine (DAM) tokens the address contributions are subtracted from global amounts. This is done to ensure the global competition remains fair even in the future as less DAM tokens are available on the market.
+
+We will now emit our state change event:
+
+```Solidity
+emit Unlocked(_msgSender(), amount, senderAddressLock.burnedAmount);
+```
+Emit that DAM was unlocked by the message sender. You can read more about this event in our [Events Section](#events)
+
+```Solidity
+// Send back the locked-in DAM amount to person calling the method
+IERC777(_token).send(_msgSender(), amount, "");  // [RE-ENTRANCY WARNING] external call, must be at the end   
+```
+Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the new ERC-777 `send()` function to send the locked-in DAM tokens from the FLUX token address back to the message sender.
+
+**Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `send()` function.
