@@ -507,7 +507,7 @@ IERC777(_token).operatorSend(_msgSender(), address(this), amount, "", ""); // [R
 ```
 Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the new ERC-777 Operators to move DAM tokens (by the FLUX smart contract) into the FLUX smart contract itself. The amount comes from function.
 
-**Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `operatorSend()` function.
+**Security Note:** There are no checks on the balance of FLUX tokens as this check is performed internally by the `operatorSend()` function.
 
 ### unlock()
 
@@ -570,7 +570,7 @@ function burnToAddress(address targetAddress, uint256 amount)
 public {
 ```
 - **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
-- **requireLocked modifier**: When calling `burnToAddress()` function make sure that current message sender has at least some Datamine (DAM) tokens locked-in their address (it is LOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
+- **requireLocked modifier**: When calling `burnToAddress()` function make sure that the TARGET ADDRESS has at least some Datamine (DAM) tokens locked-in their address (it is LOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
 
 ```Solidity
 require(amount > 0, "You must burn > 0 FLUX");
@@ -582,12 +582,12 @@ AddressLock storage targetAddressLock = addressLocks[targetAddress]; // Shortcut
 ```
 You will notice this common pattern for a mapping value reference in many FLUX smart contract functions. This allows us to use `senderAddressLock` instead of `addressLocks[_msgSender()]` while accessing struct. Notice the targetAddress here, we want to be sure that the address we are burning TO has some DAM tokens locked-in. This is an extra quality of life check to ensure addresses don't accidentally burn FLUX to wrong address.
 
-``Solidity
+```Solidity
 targetAddressLock.burnedAmount = targetAddressLock.burnedAmount.add(amount);
 ```
 Credit the address we are burning to with the burned amount (even though the message sender is the one that has the FLUX burned).
 
-```Soliditiy
+```Solidity
 globalBurnedAmount = globalBurnedAmount.add(amount);
 ```
 Increase the global burned amount by the additional target-burned amount using SafeMath.
@@ -603,7 +603,71 @@ Emit that DAM was burned by the message sender to the target address. You can re
 // Call the normal ERC-777 burn (this will destroy FLUX tokens). We don't check address balance for amount because the internal burn does this check for us.
 _burn(_msgSender(), amount, "", "");
 ```
-Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the new ERC-777 `_burn()` function to finally burn the message sender's amount of FLUX.
+Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the ERC-777 `_burn()` function to finally burn the message sender's amount of FLUX.
 
 **Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `_burn()` function.
+
+### mintToAddress()
+
+This is the final state modifying function that drives the entire minting logic. The area requires maximum security as we're creating new tokens. Let's jump right into it:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Mint FLUX tokens from a specific address to a specified address UP TO the target block
+ */
+function mintToAddress(address sourceAddress, address targetAddress, uint256 targetBlock) 
+    preventRecursion 
+    preventSameBlock(sourceAddress)
+    requireLocked(sourceAddress, true) // Ensure the adress that is being minted from has DAM locked-in
+public {
+```
+
+- **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
+- **preventSameBlock modifier**: We don't want the SOURCE ADDRESS (Address with DAM lock-in) that is performing an action to be able to execute multiple actions within the same block. This avoids potential forms of [transaction spamming](#security-our-modifiers).
+- **requireLocked modifier**: When calling `unlock()` function make sure that SOURCE ADDRESS has at least some Datamine (DAM) tokens locked-in their address (it is LOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
+
+Let's jump into the function body:
+
+```Solidity
+require(targetBlock <= block.number, "You can only mint up to current block");
+```
+Since you can target burn up to a specific block (without minting your entire balance) we don't want you to mint FLUX with a block number in the future.
+
+```Solidity
+AddressLock storage sourceAddressLock = addressLocks[sourceAddress]; // Shortcut accessor, pay attention to sourceAddress here
+```
+You will notice this common pattern for a mapping value reference in many FLUX smart contract functions. This allows us to use `sourceAddressLock` instead of `addressLocks[sourceAddress]` while accessing struct. Notice the sourceAddress here, since we are minting FROM a specific address that is not the message sender (delegated minting).
+
+```Solidity
+require(sourceAddressLock.lastMintBlockNumber < targetBlock, "You can only mint ahead of last mint block");
+```
+This is an additional security mechanism to prevent minting prior to the last mint block. That means you can lock-in your Datamine (DAM) tokens in block 1, mint on block 3 and the next time you can't mint prior to block 4 even though the DAM lock-in happened on block 1.
+
+```Solidity
+require(sourceAddressLock.minterAddress == _msgSender(), "You must be the delegated minter of the sourceAddress");
+```
+Ensure that the delegated minter of the source address is the message sender. This means the delegated minter address can also be the source address itself.
+
+```Solidity
+uint256 mintAmount = getMintAmount(sourceAddress, targetBlock);
+require(mintAmount > 0, "You can not mint zero balance");
+```
+Here we use the same public-facing view-only `getMintAmount()` function to get the actual mintable amount for the source address up to the target block. This function must return a positive balance so you can't mint 0 FLUX.
+
+```Soliditiy
+sourceAddressLock.lastMintBlockNumber = targetBlock; // Reset the mint height
+```
+It is important for us to reset the mint height to the TARGET BLOCK. So the next time we can continue from the partial mint block and can't target a block before the new target block mint.
+
+We will now emit our state change event:
+
+```Solidity
+emit Minted(_msgSender(), block.number, sourceAddress, targetAddress, targetBlock, mintAmount);
+```
+Emit that FLUX was minted by the message sender on the current block number from source address to the target address. You can read more about this event in our [Events Section](#events)
+
+Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the ERC-777 `_mint()` function to finally mint the outstanding FLUX amount to the target address.
+
+**Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the ERC-777 `_mint()` function.
+
 
