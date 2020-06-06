@@ -654,7 +654,7 @@ require(mintAmount > 0, "You can not mint zero balance");
 ```
 Here we use the same public-facing view-only `getMintAmount()` function to get the actual mintable amount for the source address up to the target block. This function must return a positive balance so you can't mint 0 FLUX.
 
-```Soliditiy
+```Solidity
 sourceAddressLock.lastMintBlockNumber = targetBlock; // Reset the mint height
 ```
 It is important for us to reset the mint height to the TARGET BLOCK. So the next time we can continue from the partial mint block and can't target a block before the new target block mint.
