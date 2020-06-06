@@ -494,7 +494,7 @@ Here we are storing DAM lock-in amount, block number of when the sender called t
 globalLockedAmount = globalLockedAmount.add(amount);
 globalBurnedAmount = globalBurnedAmount.add(senderAddressLock.burnedAmount);
 ```
-We will now emit our state change event:
+Adjust the global lock & burn amounts using SafeMath functions. We will now emit our state change event:
 
 ```Solidity
 emit Locked(_msgSender(), block.number, minterAddress, amount, senderAddressLock.burnedAmount);
@@ -555,3 +555,55 @@ IERC777(_token).send(_msgSender(), amount, "");  // [RE-ENTRANCY WARNING] extern
 Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the new ERC-777 `send()` function to send the locked-in DAM tokens from the FLUX token address back to the message sender.
 
 **Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `send()` function.
+
+### burnToAddress()
+
+FLUX was desgined to be burned through on-chain reward mechanism. By burning FLUX you receive higher mint multiplier. Let's take a look at how this function works:
+
+```Solidity
+/**
+ * @dev PUBLIC FACING: Burn FLUX tokens to a specific address
+ */
+function burnToAddress(address targetAddress, uint256 amount) 
+    preventRecursion 
+    requireLocked(targetAddress, true) // Ensure the address you are burning to has DAM locked-in
+public {
+```
+- **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
+- **requireLocked modifier**: When calling `burnToAddress()` function make sure that current message sender has at least some Datamine (DAM) tokens locked-in their address (it is LOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
+
+```Solidity
+require(amount > 0, "You must burn > 0 FLUX");
+```
+We don't want to deal with 0 FLUX burn cases so it's the first check to sanitize the user input.
+
+```Solidity
+AddressLock storage targetAddressLock = addressLocks[targetAddress]; // Shortcut accessor, pay attention to targetAddress here
+```
+You will notice this common pattern for a mapping value reference in many FLUX smart contract functions. This allows us to use `senderAddressLock` instead of `addressLocks[_msgSender()]` while accessing struct. Notice the targetAddress here, we want to be sure that the address we are burning TO has some DAM tokens locked-in. This is an extra quality of life check to ensure addresses don't accidentally burn FLUX to wrong address.
+
+``Solidity
+targetAddressLock.burnedAmount = targetAddressLock.burnedAmount.add(amount);
+```
+Credit the address we are burning to with the burned amount (even though the message sender is the one that has the FLUX burned).
+
+```Soliditiy
+globalBurnedAmount = globalBurnedAmount.add(amount);
+```
+Increase the global burned amount by the additional target-burned amount using SafeMath.
+
+We will now emit our state change event:
+
+```Solidity
+emit BurnedToAddress(_msgSender(), targetAddress, amount);
+```
+Emit that DAM was burned by the message sender to the target address. You can read more about this event in our [Events Section](#events)
+
+```Solidity
+// Call the normal ERC-777 burn (this will destroy FLUX tokens). We don't check address balance for amount because the internal burn does this check for us.
+_burn(_msgSender(), amount, "", "");
+```
+Finally the "Interactions" in [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern). Here we use the new ERC-777 `_burn()` function to finally burn the message sender's amount of FLUX.
+
+**Security Note:** There are no checks on the balance of DAM tokens as this check is performed internally by the `_burn()` function.
+
