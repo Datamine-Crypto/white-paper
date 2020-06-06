@@ -295,6 +295,7 @@ constructor(address token, uint256 startTimeReward, uint256 maxTimeReward, uint2
 Here we construct our FLUX token with 0 FLUX premine, assign our immutable state variables and register the contract as an `ERC777TokensRecipient`
 
 **Security Note:** Notice that we are using `block.number.add()` here to find out when failsafe ends (approx 28 days), using OpenZepplin SafeMath.
+
 **Security Note:** Notice that we are using `require(maxTimeReward > 0)` here to avoid division by 0 for any other smart contracts implementing our contract. This is done to avoid division by 0 and is an extra guard for incorrect Smart Contract deployment.
 
 ## Constants
