@@ -8,11 +8,11 @@ We won't be going through all of the fantastic ERC-777 features nor the ERC-20 f
 
 DAM and FLUX tokens were written in Solidity. Be sure to check out their tutorial before jumping into code: [https://solidity.readthedocs.io/en/v0.6.9/introduction-to-smart-contracts.html](https://solidity.readthedocs.io/en/v0.6.9/introduction-to-smart-contracts.html)
 
-## OpenZepplin - The secure implementation layer
+## OpenZeppelin - The secure implementation layer
 
-Our Smart Contracts are based on secure and trusted [OpenZepplin ERC-777 Smart Contract](https://docs.openzeppelin.com/contracts/2.x/api/token/erc777)
+Our Smart Contracts are based on secure and trusted [OpenZeppelin ERC-777 Smart Contract](https://docs.openzeppelin.com/contracts/2.x/api/token/erc777)
 
-OpenZepplin code is at the heart of our tokens and we follow their security practices and implementation very carefully.
+OpenZeppelin code is at the heart of our tokens and we follow their security practices and implementation very carefully.
 
 # Datamine (DAM) Token
 
@@ -24,7 +24,7 @@ This means that we can write additional smart contracts to extend base functiona
 
 # FLUX Token
 
-Let's go over the FLUX smart contract in detail skipping the entire OpenZepplin ERC-777 base implementation and focusing only on the FLUX implementation.
+Let's go over the FLUX smart contract in detail skipping the entire OpenZeppelin ERC-777 base implementation and focusing only on the FLUX implementation.
 
 The FLUX smart contract drives the business logic of Datamine, it's important that our business logic is open for the rest of the world to see. Let's jump right into the FLUX smart contract code. We'll go through code in logical blocks.
 
@@ -38,7 +38,7 @@ We've deployed FLUX token to mainnet with solidity 0.6.9. This number is locked 
 ```Solidity
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 ```
-Right away we get into the heavy usage of OpenZepplin secure libraries. This is the base ERC-777 implementation that FLUX is based on.
+Right away we get into the heavy usage of OpenZeppelin secure libraries. This is the base ERC-777 implementation that FLUX is based on.
 
 
 ```Solidity
@@ -60,7 +60,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 ```
 
-We're using both Math and SafeMath libraries from OpenZepplin: [https://docs.openzeppelin.com/contracts/2.x/api/math](https://docs.openzeppelin.com/contracts/2.x/api/math)
+We're using both Math and SafeMath libraries from OpenZeppelin: [https://docs.openzeppelin.com/contracts/2.x/api/math](https://docs.openzeppelin.com/contracts/2.x/api/math)
 
 These are critical security libraries to avoid [Integer Overflow and Underflow](https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow). All math operations such as `.add()`, `.sub()`, `.mul()`, `.div()` are done through the SafeMath library.
 
@@ -100,7 +100,7 @@ struct AddressLock {
 }
 ```
 
-Please pay attention to explicit `uin256` types to be in line with OpenZepplin contracts. These structs are stored in a `mapping` as described later in this page.
+Please pay attention to explicit `uin256` types to be in line with OpenZeppelin contracts. These structs are stored in a `mapping` as described later in this page.
 
 ## Contract Inheritance & Implementations
 
@@ -120,7 +120,7 @@ Here you will notice something interesting. Flux token is both an `ERC777` contr
  */
 using SafeMath for uint256;
  ```
-This is the first line of contract and is an extremely important security feature. We use OpenZepplin SafeMath for all arithmetic operations to avoid Integer Overflow and Underflow attacks as described here: https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow
+This is the first line of contract and is an extremely important security feature. We use OpenZeppelin SafeMath for all arithmetic operations to avoid Integer Overflow and Underflow attacks as described here: https://consensys.github.io/smart-contract-best-practices/known_attacks/#integer-overflow-and-underflow
 
 ## Security: Mutex & Checks-Effects-Interactions Pattern usage
 
@@ -293,7 +293,7 @@ constructor(address token, uint256 startTimeReward, uint256 maxTimeReward, uint2
 ```
 Here we construct our FLUX token with 0 FLUX premine, assign our immutable state variables and register the contract as an `ERC777TokensRecipient`
 
-**Security Note:** Notice that we are using `block.number.add()` here to find out when failsafe ends (approx 28 days), using OpenZepplin SafeMath.
+**Security Note:** Notice that we are using `block.number.add()` here to find out when failsafe ends (approx 28 days), using OpenZeppelin SafeMath.
 
 **Security Note:** Notice that we are using `require(maxTimeReward > 0)` here to avoid division by 0 for any other smart contracts implementing our contract. This is done to avoid division by 0 and is an extra guard for incorrect Smart Contract deployment.
 
@@ -1014,13 +1014,13 @@ We decided not to release the FLUX smart contract source code in Testnet due to 
 
 We've split up the smart contract into multiple easy-to-understand constants, immutable variables and functions. There were some ideas that were scrapped to keep the contract as simple as possible but powerful enough to provide new features like Delegated Minting, FLUX target-burning and partial minting.
 
-We've chosen the best security base possible at time of writing FLUX smart contract: OpenZepplin. We've used their entire product line including unit testing and Smart Contract libraries.
+We've chosen the best security base possible at time of writing FLUX smart contract: OpenZeppelin. We've used their entire product line including unit testing and Smart Contract libraries.
 
 We also chose to split up all logic and prefer clear variable names instead of reducing lines of code. Overdoing it on require checks in favor of improved errors instead of relying on SafeMath overflow protection in places. Everything is well documented and we go through the entire smart contract in detail in this whitepaper.
 
 #### Stay up to date
 
-We're using the latest Solidity v0.6.9 which was released only days prior to the mainnet launch. We've also used the latest OpenZepplin available smart contracts.
+We're using the latest Solidity v0.6.9 which was released only days prior to the mainnet launch. We've also used the latest OpenZeppelin available smart contracts.
 
 #### Be aware of blockchain properties
 
@@ -1091,11 +1091,8 @@ All state modifying functions have events associated with them. See [Events Sect
 
 ### Avoid using tx.origin
 
-We're always using `_msgSender()` (GSN version of msg.sender) to follow OpenZepplin style of coding. There are no `tx.origin` references in the FLUX smart contract. However there are safe `tx.origin` uses in OpenZeppling ERC-777.
+We're always using `_msgSender()` (GSN version of msg.sender) to follow OpenZeppelin style of coding. There are no `tx.origin` references in the FLUX smart contract. However there are safe `tx.origin` uses in OpenZeppeling ERC-777.
 
 ### Timestamp Dependence
 
 To keep the time math formulas basic we've based all of our math around the fact that 1 block = 15 seconds. This assumes that this number is variable and can change in the future. The goal of this is to stay away from timestamp drifting and to avoid time-based inaccuracy.
-
-
-
