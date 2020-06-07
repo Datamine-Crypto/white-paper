@@ -1044,3 +1044,61 @@ We follow [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/
 
 ##### Mark untrusted contracts
 All external calls are marked with `[RE-ENTRANCY WARNING]  external call, must be at the end` to clearly mark these functions.
+
+##### Avoid state changes after external calls
+We follow [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) pattern so there are never any state changes after an external call.
+
+##### Don't use transfer() or send().
+We use the ERC-777 base functions so this security problem does not apply.
+
+##### Handle errors in external calls
+Due to ERC-777 nature all external calls revert with error message so they do not need to be handled in our case.
+
+#### Remember that on-chain data is public
+
+We've clearly marked our functions with `@dev PUBLIC FACING:`. The only reason variables are private is because they're immutable or constant so they can be derived from the construction of the smart contract.
+
+#### Beware of negation of the most negative signed integer
+
+We're using only unsigned integers and only `uint256` with all arithmetic operations performed with SafeMath.
+
+#### Use assert(), require(), revert() properly
+
+We validate all user input with heavy use of `require()`. No use of `assert()` but the best place for this would have been during locking & burning (to ensure the global lock-in and burn amounts are modified as expected.
+
+#### Use modifiers only for checks
+
+Our modifiers are read-only. Be sure to check our modifiers in [Security: Our Modifiers Section](#security-our-modifiers)
+
+#### Beware rounding with integer division
+
+Before division we always double check for unexpected division by zero. With `Math.min()` we also don't run into unexpected rounding issues.
+
+### Fallback Functions
+
+We do not have a fallback function so these types of attacks do not apply.
+
+### Explicitly mark visibility in functions and state variables
+
+All functions are explicitly marked with visibility
+
+### Lock pragmas to specific compiler version
+
+We chose NOT to lock our pragma version until there is a breaking change. This will allow you to use a higher compiler version in the future (We used the same `^0.6.0` pragma as the OpenZepplin ERC-777 implementation). The plan is to cap it at the last supported version in the future.
+
+FLUX was deployed with Compiled Solidity `0.6.9` (optimized build).
+
+### Use events to monitor contract activity
+
+All state modifying functions have events associated with them. See [Events Section](#events) for more details.
+
+### Avoid using tx.origin
+
+We're always using `_msgSender()` (GSN version of msg.sender) to follow OpenZepplin style of coding. There are no `tx.origin` references in the FLUX smart contract. However there are safe `tx.origin` uses in OpenZeppling ERC-777.
+
+### Timestamp Dependence
+
+To keep the time math formulas basic we've based all of our math around the fact that 1 block = 15 seconds. This assumes that this number is variable and can change in the future. The goal of this is to stay away from timestamp drifting and to avoid time-based inaccuracy.
+
+
+
