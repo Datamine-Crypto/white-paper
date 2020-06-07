@@ -31,10 +31,9 @@ The FLUX smart contract drives the business logic of Datamine, it's important th
 ## Libraries & Interfaces
 
 ```Solidity
-pragma solidity ^0.6.0;
+pragma solidity 0.6.9;
 ```
-To follow the OpenZepplin approach, we've decided to go with the same min compiler version. We've deployed FLUX token to mainnet with solidity 0.6.9
-
+We've deployed FLUX token to mainnet with solidity 0.6.9. This number is locked as per security recommendation: [Lock pragmas to specific compiler version](https://consensys.github.io/smart-contract-best-practices/recommendations/#lock-pragmas-to-specific-compiler-version)
 
 ```Solidity
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
@@ -1084,9 +1083,7 @@ All functions are explicitly marked with visibility
 
 ### Lock pragmas to specific compiler version
 
-We chose NOT to lock our pragma version until there is a breaking change. This will allow you to use a higher compiler version in the future (We used the same `^0.6.0` pragma as the OpenZepplin ERC-777 implementation). The plan is to cap it at the last supported version in the future.
-
-FLUX was deployed with Compiled Solidity `0.6.9` (optimized build).
+FLUX was deployed with Compiled Solidity `0.6.9` (optimized build). This number is locked in the source code.
 
 ### Use events to monitor contract activity
 
