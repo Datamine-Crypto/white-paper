@@ -126,7 +126,7 @@ This is the first line of contract and is an extremely important security featur
 
 We're over-using a mutex pattern to avoid a form of re-entrancy attacks as described here: https://consensys.github.io/smart-contract-best-practices/known_attacks/#reentrancy
 
-We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) throughout the contract. This is why mutex is over-doing it but we want over-do it on the security in favor of small gas cost increase.
+We're using [Checks-Effects-Interactions Pattern](https://solidity.readthedocs.io/en/v0.6.9/security-considerations.html#use-the-checks-effects-interactions-pattern) throughout the contract. This is why mutex is over-doing it but we want to over-do it on the security in favor of small gas cost increase.
 
 ```Solidity
 /**
@@ -164,7 +164,7 @@ modifier preventSameBlock(address targetAddress) {
 ```
 To keep things simple and to avoid potential attacks in the future we've limited our all smart contract state changes to one block per address. This means you can't lock/unlock or lock/mint within the same block.
 
-Since Ethereum blocks are only ~15 seconds in duration we though this slight time delay is not a factor for any normal user and is an added security benefit.
+Since Ethereum blocks are only ~15 seconds in duration we thought this slight time delay is not a factor for any normal user and is an added security benefit.
 
 We also have the following modifier that is used throughout all state changes:
 ```Solidity
@@ -259,7 +259,7 @@ If Ethereum block times change significantly in the future then the entire FLUX 
  */
 uint256 immutable private _startTimeReward;
 ```
-To start receiving the time bonus (reward of which is capped at 3x a person will need to wait this many blocks). This is set to ~24 hours on mainnet and prvenets users from locking-in Datamine (DAM) tokens for a short duration. Once again, our goal here is incentivized security where we want you to lock-in your tokens for months at a time.
+To start receiving the time bonus (reward of which is capped at 3x a person will need to wait this many blocks). This is set to ~24 hours on mainnet and prevents users from locking-in Datamine (DAM) tokens for a short duration. Once again, our goal here is incentivized security where we want you to lock-in your tokens for months at a time.
 
 ```Solidity
 /**
@@ -341,7 +341,7 @@ Both time and burn multipliers have 4 decimal precision. Because we're using onl
  */
 uint256 private constant _maxBurnMultiplier = 100000;
 ```
-You can burn FLUX to get up to 10x burn multiplier. This is that number and is used in the minting formula. This number is divided by `_percentMultiplier` consant.
+You can burn FLUX to get up to 10x burn multiplier. This is that number and is used in the minting formula. This number is divided by `_percentMultiplier` constant.
 
 ```Solidity
 /**
@@ -349,7 +349,7 @@ You can burn FLUX to get up to 10x burn multiplier. This is that number and is u
  */
 uint256 private constant _maxTimeMultiplier = 30000;
 ```
-You can get up to 3x DAM lock-in time multiplier. This number is divided by `_percentMultiplier` consant.
+You can get up to 3x DAM lock-in time multiplier. This number is divided by `_percentMultiplier` constant.
 
 ```Solidity
 /**
@@ -994,7 +994,7 @@ Here we'll go through a quick checklist of Best Security Practices, known attack
 
 ### General Philosophy
 
-Let's go through the main points on-by-one:
+Let's go through the main points one-by-one:
 
 #### Prepare for failure
 
