@@ -30,7 +30,7 @@ Let's go over the FLUX smart contract in detail skipping the entire OpenZeppelin
 
 The FLUX smart contract drives the business logic of Datamine, it's important that our business logic is open for the rest of the world to see. Let's jump right into the FLUX smart contract code. We'll go through code in logical blocks.
 
-Full Datamine (DAM) Token source code can be found here: https://etherscan.io/address/0x469eda64aed3a3ad6f868c44564291aa415cb1d9#code
+Full FLUX Token source code can be found here: https://etherscan.io/address/0x469eda64aed3a3ad6f868c44564291aa415cb1d9#code
 
 ## Libraries & Interfaces
 
