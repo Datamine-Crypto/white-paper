@@ -24,7 +24,7 @@ This means that we can write additional smart contracts to extend base functiona
 
 Mainnet Deployed Datamine (DAM) Token can be found here: https://etherscan.io/address/0xf80d589b3dbe130c270a69f1a69d050f268786df#code
 
-Full Datamine (DAM) Token source code can be found here: https://github.com/Datamine-Crypto/white-paper/tree/master/contracts/dam.sol
+Full Datamine (DAM) Token source code can be found here: [contracts/dam.sol](https://github.com/Datamine-Crypto/white-paper/tree/master/contracts/dam.sol)
 
 # FLUX Token
 
@@ -34,7 +34,7 @@ The FLUX smart contract drives the business logic of Datamine, it's important th
 
 Mainnet Deployed FLUX Token can be found here: https://etherscan.io/address/0x469eda64aed3a3ad6f868c44564291aa415cb1d9#code
 
-Full FLUX Token source code can be found here: https://github.com/Datamine-Crypto/white-paper/tree/master/contracts/flux.sol
+Full FLUX Token source code can be found here: [contracts/flux.sol](https://github.com/Datamine-Crypto/white-paper/tree/master/contracts/flux.sol)
 
 ## Libraries & Interfaces
 
