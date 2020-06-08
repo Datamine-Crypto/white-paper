@@ -22,11 +22,15 @@ All extensions on the base tokens are done through the new ERC-777 "Operators". 
 
 This means that we can write additional smart contracts to extend base functionality of Datamine (DAM) token. Our first cross-smart contract functionality written in this manner is FLUX, our second, mintable token.
 
+Full Datamine (DAM) Token source code can be found here: https://etherscan.io/address/0xf80d589b3dbe130c270a69f1a69d050f268786df#code
+
 # FLUX Token
 
 Let's go over the FLUX smart contract in detail skipping the entire OpenZeppelin ERC-777 base implementation and focusing only on the FLUX implementation.
 
 The FLUX smart contract drives the business logic of Datamine, it's important that our business logic is open for the rest of the world to see. Let's jump right into the FLUX smart contract code. We'll go through code in logical blocks.
+
+Full Datamine (DAM) Token source code can be found here: https://etherscan.io/address/0x469eda64aed3a3ad6f868c44564291aa415cb1d9#code
 
 ## Libraries & Interfaces
 
