@@ -14,7 +14,7 @@ Our Smart Contracts are based on secure and trusted [OpenZeppelin ERC-777 Smart 
 
 OpenZeppelin code is at the heart of our tokens and we follow their security practices and implementation very carefully.
 
-# Datamine (DAM) Token: 0xf80d589b3dbe130c270a69f1a69d050f268786df
+# Datamine (DAM) Token
 
 For the base Datamine (DAM) token we've kept it as simple and basic as possible. This token is a standard ERC-777 implementation and was deployed on Ethereum mainnet with fixed supply of 25,000,000 DAM. We'll have the final amount of burned DAM tokens after the BWK coin -> DAM token is complete.
 
@@ -28,7 +28,7 @@ Compilation Parameters: Solidity v0.6.6+commit.6c089d02. No Optimizations
 
 Full Datamine (DAM) Token source code can be found here: [contracts/dam.sol](https://github.com/Datamine-Crypto/white-paper/tree/master/contracts/dam.sol)
 
-# FLUX Token: 0x469eDA64aEd3A3Ad6f868c44564291aA415cB1d9
+# FLUX Token
 
 Let's go over the FLUX smart contract in detail skipping the entire OpenZeppelin ERC-777 base implementation and focusing only on the FLUX implementation.
 
