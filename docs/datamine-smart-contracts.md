@@ -1103,8 +1103,20 @@ All state modifying functions have events associated with them. See [Events Sect
 
 ### Avoid using tx.origin
 
-We're always using `_msgSender()` (GSN version of msg.sender) to follow OpenZeppelin style of coding. There are no `tx.origin` references in the FLUX smart contract. However there are safe `tx.origin` uses in OpenZeppeling ERC-777.
+We're always using `_msgSender()` (GSN version of msg.sender) to follow OpenZeppelin style of coding. There are no `tx.origin` references in the FLUX smart contract. However there are safe `tx.origin` uses in OpenZeppelin ERC-777.
 
 ### Timestamp Dependence
 
 To keep the time math formulas basic we've based all of our math around the fact that 1 block = 15 seconds. This assumes that this number is variable and can change in the future. The goal of this is to stay away from timestamp drifting and to avoid time-based inaccuracy.
+
+### Note on EIP20 API Approve / TransferFrom multiple withdrawal attack
+
+Both DAM and FLUX tokens implement the OpenZeppelin ERC20 compatible `function approve(address _spender, uint256 _value) public returns (bool success)`
+
+As noted in Ethereum EIP-20: <https://eips.ethereum.org/EIPS/eip-20> 
+
+NOTE: To prevent attack vectors like the one [described here](https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/) and discussed [here](https://docs.google.com/document/d/1YLPtQxZu1UAvO9cZ1O2RPXBbT0mooh4DYKjA_jp-RLM/), clients SHOULD make sure to create user interfaces in such a way that they set the allowance first to 0 before setting it to another value for the same spender. **THOUGH The contract itself shouldn’t enforce it, to allow backwards compatibility with contracts deployed before**
+
+To keep ERC-20 compatability we do not enforce it and **clients SHOULD make sure to create user interfaces in such a way that they set the allowance first to 0 before setting it to another value for the same spender** as it is set in the base OpenZeppelin ERC-20 contract (as stated above).
+
+There is no backward compatible resolution to this problem. If you are interested on reading up more on developments of this general ERC-20 issue be sure to check out  [EIP-738](https://github.com/ethereum/EIPs/issues/738)
