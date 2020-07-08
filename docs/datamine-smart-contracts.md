@@ -174,7 +174,7 @@ modifier preventSameBlock(address targetAddress) {
     _; // Call the actual code
 }
 ```
-To keep things simple and to avoid potential attacks in the future we've limited our all smart contract state changes to one block per address. This means you can't lock/unlock or lock/mint within the same block.
+To keep things simple and to avoid potential attacks in the future we've limited our all smart contract state changes to one block per address. This means you can't lock/unlock or lock/mint within the same block. Please note the goal of this is to prevent user error so it's still possible to do partial mints within the same block if you send difvferent targetBlock numbers.
 
 Since Ethereum blocks are only ~15 seconds in duration we thought this slight time delay is not a factor for any normal user and is an added security benefit.
 
@@ -634,7 +634,7 @@ public {
 ```
 
 - **preventRecursion modifier**: [Mutex-locking](#security-mutex--checks-effects-interactions-pattern-usage).
-- **preventSameBlock modifier**: We don't want the SOURCE ADDRESS (Address with DAM lock-in) that is performing an action to be able to execute multiple actions within the same block. This avoids potential forms of [transaction spamming](#security-our-modifiers).
+- **preventSameBlock modifier**: We don't want the SOURCE ADDRESS (Address with DAM lock-in) that is performing an action to be able to mint on the same block they locked-in their Datamine (DAM) tokens. This avoids potential forms of [transaction spamming](#security-our-modifiers).
 - **requireLocked modifier**: When calling `unlock()` function make sure that SOURCE ADDRESS has at least some Datamine (DAM) tokens locked-in their address (it is LOCKED). To keep things simple there are only two states to addresses: "locked/unlocked".
 
 Let's jump into the function body:
