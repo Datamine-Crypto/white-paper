@@ -16,7 +16,7 @@ OpenZeppelin code is at the heart of our tokens and we follow their security pra
 
 # Datamine (DAM) Token
 
-For the base Datamine (DAM) token we've kept it as simple and basic as possible. This token is a standard ERC-777 implementation and was deployed on Ethereum mainnet with fixed supply of 25,000,000 DAM. We'll have the final amount of burned DAM tokens after the BWK coin -> DAM token is complete.
+For the base Datamine (DAM) token we've kept it as simple and basic as possible. This token is a standard ERC-777 implementation and was deployed on Ethereum mainnet with fixed supply of 25,000,000 DAM. 16,876,778.9 DAM tokens were ultimately swapped and 8,123,221.1 DAM tokens were burned. To bootstrap the DAM/FLUX token ecosystem we chose to use a fair distribution of the two year old Bulwark blockchain.
 
 All extensions on the base tokens are done through the new ERC-777 "Operators". This feature allows other ethereum addresses to operate on behalf of your account. Instead of another address, we've used this functionality to grant another smart contract operator role. 
 
