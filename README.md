@@ -8,6 +8,8 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 
 ## Page Of Contents
 
-1. [Our Smart Contracts - In-Depth Breakdown](docs/datamine-smart-contracts.md)
+1. [Datamine FLUX Economic Model - Breakdown of Smart Contracts](docs/datamine-ecosystem-rules.md)
+2. [Our Smart Contracts - In-Depth Breakdown](docs/datamine-smart-contracts.md)
+
 
 ... Work in progress. Please check back for more sections in the future.
