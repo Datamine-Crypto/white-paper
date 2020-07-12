@@ -49,3 +49,11 @@ Here we will describe the inner workings of the smart contract and lay it out on
 \* First 161280 DAM lock-in blocks DO NOT COUNT towards time bonus
 
 
+## Burning FLUX
+
+When you burn flux to a specific address the following happens:
+
+- Address burned amount goes up by the amount burned
+- Global burned pool amount goes up by the amount burned
+
+
