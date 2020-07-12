@@ -2,7 +2,7 @@
 
 ## Precursor
 
-Here we will describe the inner workings of the smart contract and lay it out on step-by-step basis. This page does not describe WHY our economic system works but HOW it works behind the scenes. This page is not going to include various security and exception checks in place to ensure there is even and fair distribtuion of FLUX.
+Here we will describe the inner workings of the smart contract and lay it out on a step-by-step basis. This page does not describe WHY our economic system works but HOW it works behind the scenes. This page is not going to include various security and exception checks in place to ensure there is even and fair distribtuion of FLUX.
 
 ## Assumptions
 
@@ -32,7 +32,7 @@ Here we will describe the inner workings of the smart contract and lay it out on
 
 ## FLUX minting formula
 
-**Unminted FLUX Amount** = (((0.00000001 * Unminted Blocks * Burn Bonus Multiplier ) / 10000) * Time bonus multiplier) / 10000
+**Unminted FLUX Amount** = (((0.00000001 * (DAM tokens Locked-in) * Unminted Blocks * Burn Bonus Multiplier ) / 10000) * Time bonus multiplier) / 10000
 
 ### Burn Bonus Multiplier
 
