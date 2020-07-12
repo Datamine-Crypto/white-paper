@@ -51,7 +51,11 @@ Here we will describe the inner workings of the smart contract and lay it out on
 
 ## Burning FLUX
 
-When you burn flux to a specific address the following happens:
+When you burn FLUX to a specific address the following happens:
+
+- Address burned amount goes up by the amount burned
+- Global burned pool amount goes up by the amount burned
+ to a specific address the following happens:
 
 - Address burned amount goes up by the amount burned
 - Global burned pool amount goes up by the amount burned
