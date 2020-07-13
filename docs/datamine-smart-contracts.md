@@ -441,6 +441,8 @@ event Minted(address sender, uint256 blockNumber, address sourceAddress, address
 ```
 Occurs when FLUX tokens are minted by the delegated minter. 
 
+Note that the event name 'Minted' collides with the ERC777 'Minted' event. You can filter these out by thecking the `sourceAddress` property name.
+
 - **sender**: What is the address of the delegated minter?
 - **blockNumber**: What block number did this mint occur on? This is important for math calculations, need to be precise here.
 - **sourceAddress**: From what address are we minting from? The minted amount will be based on this address and the sender must be the delegated minter for this address.
