@@ -11,5 +11,9 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 1. [Datamine FLUX Economic Model - Breakdown of Smart Contracts](docs/datamine-ecosystem-rules.md)
 2. [Our Smart Contracts - In-Depth Breakdown](docs/datamine-smart-contracts.md)
 
+## Security Audits
+
+1. [Librehash - EIP-738](docs/audits/librehash.md)
+
 
 ... Work in progress. Please check back for more sections in the future.
