@@ -5,7 +5,7 @@
 **YOUR FUNDS ARE SAFE AND THERE IS NO EXPLOIT WITHIN THE LOCK-IN MECHANISM**
 
 The core exploit that this audit mentions was already outlined in our whitepaper: [Note on EIP20 API Approve / TransferFrom multiple withdrawal attack
-](docs/datamine-smart-contracts.md#note-on-eip20-api-approve--transferfrom-multiple-withdrawal-attack)
+](/docs/datamine-smart-contracts.md#note-on-eip20-api-approve--transferfrom-multiple-withdrawal-attack)
 
 Since this is a well-known ERC-20 bug additional security measures must be taken in consideration when using `approve()` and `transferFrom()` functions in any ERC-20 smart contract.
 
