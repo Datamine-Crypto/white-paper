@@ -11,7 +11,12 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 1. [Datamine FLUX Economic Model - Breakdown of Smart Contracts](docs/datamine-ecosystem-rules.md)
 2. [Our Smart Contracts - In-Depth Breakdown](docs/datamine-smart-contracts.md)
 
-## Security Audits
+## Professional - Security Audits
+
+1. [SlowMist - DAM](audits/SlowMist%20-%20Smart%20Contract%20Security%20Audit%20Report%20-%20DamToken.pdf)
+1. [SlowMist - FLUX](audits/SlowMist%20-%20Smart%20Contract%20Security%20Audit%20Report%20-%20FluxToken.pdf)
+
+## Audit Responses
 
 1. [Librehash - EIP-738](docs/audits/librehash.md)
 
