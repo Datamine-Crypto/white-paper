@@ -10,6 +10,7 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 
 1. [Datamine FLUX Economic Model - Breakdown of Smart Contracts](docs/datamine-ecosystem-rules.md)
 2. [Our Smart Contracts - In-Depth Breakdown](docs/datamine-smart-contracts.md)
+3. [Unit Testing Results & Ropsten Testnet](docs/testing-results.md)
 
 ## Professional - Security Audits
 
