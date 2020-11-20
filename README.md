@@ -16,7 +16,10 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 
 1. [SlowMist - DAM](audits/SlowMist%20-%20Smart%20Contract%20Security%20Audit%20Report%20-%20DamToken.pdf)
 2. [SlowMist - FLUX](audits/SlowMist%20-%20Smart%20Contract%20Security%20Audit%20Report%20-%20FluxToken.pdf)
-3. [DeFi Safety - 81% Score](https://defisafety.com/2020/11/20/datamine/)
+
+## Professional - Quality & Safety
+
+1. [DeFi Safety - 81% Score](https://defisafety.com/2020/11/20/datamine/)
 
 ## Audit Responses
 
