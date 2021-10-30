@@ -19,7 +19,7 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 
 ## Professional - Quality & Safety
 
-1. [DeFi Safety - 81% Score](https://defisafety.com/2020/12/11/datamine/)
+1. [DeFi Safety - 81% Score](https://docs.defisafety.com/v/0.6/datamine-process-quality-review)
 
 ## Audit Responses
 
