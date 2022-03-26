@@ -38,13 +38,13 @@ Here we will describe the inner workings of the smart contract and lay it out on
 
 **My Ratio** = (My total burned FLUX for this address * 10000) / (My total locked-in DAM tokens)
 
-**Global Ratio** = (Worldwide total burned FLUX for this address * 10000) / (Worldwide total locked-in DAM tokens)
+**Global Ratio** = (Worldwide FLUX burned * 10000) / (Worldwide total locked-in DAM tokens)
 
 **Bonus Multiplier** = Math.min(100000, ((MyRatio * 10000) / (Global Ratio)) + 10000)
 
 ### Time Bonus Multiplier
 
-**Time Multiplier** = Math.min(30000, ((Unminted Amount * 20000) / 161280) + 10000)
+**Time Multiplier** = Math.min(30000, ((Unminted Blocks * 20000) / 161280) + 10000)
 
 \* First 161280 DAM lock-in blocks DO NOT COUNT towards time bonus
 
