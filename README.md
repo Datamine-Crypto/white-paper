@@ -19,7 +19,9 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 
 ## Professional - Quality & Safety
 
-1. [DeFi Safety - 81% Score](https://docs.defisafety.com/v/0.6/datamine-process-quality-review)
+1. DeFi Safety - 81% Score
+![image](https://github.com/Datamine-Crypto/white-paper/assets/50343356/4886dff3-8193-4cb5-8a3c-4ddace609e5b)
+
 
 ## Audit Responses
 
