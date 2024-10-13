@@ -1602,7 +1602,7 @@ contract LockquidityToken is ERC777, IERC777Recipient {
         
         // Avoid division by 0 & ensure 1x multiplier if nothing is locked
         if (globalRatio == 0 || myRatio == 0) {
-            return _percentMultiplier;
+            return _percentBurnMultiplier;
         }
 
         // The final multiplier is return with 10000x multiplication and will need to be divided by 10000 for final number
