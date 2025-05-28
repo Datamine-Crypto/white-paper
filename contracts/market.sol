@@ -135,14 +135,8 @@ contract DatamineTimRewards is Context, IERC777Recipient {
         burnToAddressLock.rewardsAmount -= amountToReceive;
         burnFromAddressLock.rewardsAmount += amountToReceive;
 
-        uint256 beforeAddressThisFluxBalance = fluxToken.balanceOf(address(this));
-
         fluxToken.burnToAddress(burnToAddress, amountToBurn);
         fluxToken.mintToAddress(burnToAddress, address(this), targetBlock);
-
-        uint256 addressThisFluxBalance = fluxToken.balanceOf(address(this));
-
-        require(addressThisFluxBalance == beforeAddressThisFluxBalance + amountToMint - amountToBurn, "Expected contract balance mismatch");
 
         emit TokensBurned(
             burnToAddress,
