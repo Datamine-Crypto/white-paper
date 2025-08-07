@@ -54,27 +54,39 @@ The following specific call sequences were analyzed to confirm the contract's sa
 
 *   **Scenario 1: lock() re-enters unlock()**
     
-    *   **Execution Order:** The send() from unlock would execute _before_ the operatorSend() from lock completes.
+    *   **Execution Order:** The IERC777(\_token).send() from unlock would execute _before_ the IERC777(\_token).operatorSend() from lock completes.
         
-    *   **Outcome:** Benign. The lock function first increases the user's balance. The re-entrant unlock call then decreases it back to zero. The net effect on the contract's state is null. The transaction succeeds, and the user ends in the same state they started, having only spent gas.
+    *   **Outcome:** Benign. The lock function increases the user's balance. The re-entrant unlock call, scoped to a different attacker contract, would fail its requireLocked check and revert. Even if it could target the original caller, the net effect would be null.
         
-*   **Scenario 2: unlock() re-enters lock()**
+*   **Scenario 2: lock() re-enters burnToAddress()**
     
-    *   **Execution Order:** The operatorSend() from lock would execute _before_ the send() from unlock completes.
+    *   **Execution Order:** The \_send() from burnToAddress would execute _before_ the IERC777(\_token).operatorSend() from lock completes.
         
-    *   **Outcome:** Benign. The unlock function first sets the user's locked amount to 0. The re-entrant lock call then succeeds because its requireLocked(..., false) check passes. The user's blockNumber for their time multiplier is reset, but this is a disadvantage, not an exploit. The final state is consistent.
+    *   **Outcome:** Benign (The "Instant Multiplier"). The lock function updates the user's state. The re-entrant burnToAddress call succeeds, updating the user's burnedAmount. The state remains consistent, with the only outcome being the minor one-block timing advantage.
         
-*   **Scenario 3: mintToAddress() re-enters burnToAddress()**
+*   **Scenario 3: lock() re-enters mintToAddress()**
     
-    *   **Execution Order:** The \_send() from burnToAddress would execute _before_ the \_mint() from mintToAddress completes.
+    *   **Execution Order:** The \_mint() from mintToAddress would execute _before_ the IERC777(\_token).operatorSend() from lock completes.
         
-    *   **Outcome:** Benign. The mintToAddress function updates the lastMintBlockNumber _before_ the external call. The re-entrant burnToAddress call then simply adds to the user's burnedAmount. The state remains consistent, and the outcome is the same as if the calls were made sequentially.
+    *   **Outcome:** Reverts. The lock function sets lastMintBlockNumber = block.number. The re-entrant call to mintToAddress would fail its require(lastMintBlockNumber < targetBlock) check, as block.number is not less than block.number. The transaction would safely revert.
         
-*   **Scenario 4: burnToAddress() re-enters mintToAddress()**
+*   **Scenario 4: unlock() re-enters lock()**
+    
+    *   **Execution Order:** The IERC777(\_token).operatorSend() from lock would execute _before_ the IERC777(\_token).send() from unlock completes.
+        
+    *   **Outcome:** Benign. The unlock function sets the user's locked amount to 0. The re-entrant lock call then succeeds because its requireLocked(..., false) check passes. The user's blockNumber for their time multiplier is reset, but this is a disadvantage, not an exploit. The final state is consistent.
+        
+*   **Scenario 5: unlock() re-enters burnToAddress()**
+    
+    *   **Execution Order:** The \_send() from burnToAddress would execute _before_ the IERC777(\_token).send() from unlock completes.
+        
+    *   **Outcome:** Reverts. The unlock function sets the user's amount to 0. The re-entrant call to burnToAddress would then fail its requireLocked(..., true) check, causing the transaction to safely revert.
+        
+*   **Scenario 6: burnToAddress() re-enters mintToAddress()**
     
     *   **Execution Order:** The \_mint() from mintToAddress would execute _before_ the \_send() from burnToAddress completes.
         
-    *   **Outcome:** Benign. The burnToAddress function updates the burnedAmount _before_ the external call. The re-entrant mintToAddress call then calculates rewards based on this already-updated state and resets the lastMintBlockNumber. The final state is consistent and provides no unfair advantage.
+    *   **Outcome:** Benign. The burnToAddress function updates the burnedAmount. The re-entrant mintToAddress call then calculates rewards based on this already-updated state and resets the lastMintBlockNumber. The final state is consistent and provides no unfair advantage.
         
 
 ### 5\. Validator Exploitability Analysis
