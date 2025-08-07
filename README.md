@@ -25,7 +25,8 @@ Be sure to check the whitepaper for frequent updates as there is a lot to discus
 
 ## Audit Responses
 
-1. [Librehash - EIP-738](docs/audits/librehash.md)
+1. [Librehash - EIP-738 -  July 14, 2020](docs/audits/librehash.md)
+2. [Lockquidity Protocol Security Analysis - August 6, 2025](docs/audits/reentrancy2025_08_06.md)
 
 
 ... Work in progress. Please check back for more sections in the future.
