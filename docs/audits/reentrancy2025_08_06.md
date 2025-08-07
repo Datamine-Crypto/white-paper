@@ -35,7 +35,13 @@ The practical impact of these re-entrancy vectors is negligible. An attacker can
 *   **The "Instant Multiplier"**: The most notable outcome is the ability to call lock() and burnToAddress() in the same transaction. This gives the attacker a boosted reward multiplier from their first block. However, because the getMintAmount() function applies multipliers retroactively, the financial advantage is limited to the rewards of a single block. This is considered an acceptable, low-impact risk.
     
 
-#### Specific Re-entrancy Scenarios Analyzed
+### 3\. Illustration of Re-entrancy Vector
+
+<img width="1560" height="741" alt="image" src="https://github.com/user-attachments/assets/d80afcc4-5660-46ae-844c-15ba65aafcf3" />
+
+The screenshot below pinpoints the exact moment within the lock() function where re-entrancy can occur. All state changes (Effects) have been completed, and the contract is about to make an external call (Interaction). It is during this external call that an attacker's hook can be triggered, allowing them to call back into the protocol before the lock() transaction has fully completed.
+
+### 4\. Specific Re-entrancy Scenarios Analyzed
 
 The following specific call sequences were analyzed to confirm the contract's safety.
 
@@ -64,19 +70,13 @@ The following specific call sequences were analyzed to confirm the contract's sa
     *   **Outcome:** Benign. The burnToAddress function updates the burnedAmount _before_ the external call. The re-entrant mintToAddress call then calculates rewards based on this already-updated state and resets the lastMintBlockNumber. The final state is consistent and provides no unfair advantage.
         
 
-#### Conclusion
-
-The re-entrancy vectors are a known and accepted consequence of using the ERC777 standard. The protocol's reliance on the Checks-Effects-Interactions pattern is a robust mitigation that successfully neutralizes the threat, rendering the potential for re-entrancy an informational finding rather than a critical vulnerability.
-
-3\. Validator Exploitability Analysis
--------------------------------------
+### 5\. Validator Exploitability Analysis
 
 The contract's reward logic is secure against manipulation by block producers (validators/miners).
 
 The getAddressTimeMultiplier() function, which is critical for calculating rewards, is based on block.number. A validator cannot manipulate the current block number; they can only produce the next sequential block. While they can influence transaction _ordering_ within a block, this does not grant them any special advantage in this protocol that isn't already available to any user via gas price bidding (MEV).
 
-4\. Overall Conclusion
-----------------------
+### 6\. Overall Conclusion
 
 The LockquidityToken contract correctly anticipates the re-entrancy risks inherent in its dependencies and successfully mitigates them through rigorous adherence to the Checks-Effects-Interactions pattern. The identified attack paths do not allow for the manipulation of the contract's core logic or for any significant financial gain.
 
