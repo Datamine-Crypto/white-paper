@@ -6,7 +6,7 @@ Lockquidity Protocol Security Analysis - August 6, 2025
 
 This report details the security analysis of the LockquidityToken smart contract. The primary focus of the investigation was the contract's resilience against re-entrancy attacks, which are an inherent risk of the ERC777 token standard due to its token hooks.
 
-The overall finding is that while re-entrancy is possible, the contract is **fundamentally safe from critical exploits**. This security is achieved through the consistent and correct implementation of the **Checks-Effects-Interactions pattern**. All critical state updates are performed _before_ any external calls that would trigger a re-entrancy hook. This robust pattern successfully mitigates the risk of state corruption and prevents attackers from gaining any significant financial advantage.
+The overall finding is that while re-entrancy is possible, the contract is **fundamentally safe from critical exploits**. This security is achieved through two key defense layers: the consistent implementation of the **Checks-Effects-Interactions pattern** and the use of **msg.sender-scoped logic**. All critical state updates are performed _before_ any external calls, and these updates are strictly tied to the direct caller's address, which successfully mitigates the risk of state corruption and prevents attackers from gaining any significant financial advantage.
 
 The analysis confirms that the protocol's core logic cannot be broken by re-entering functions. The only observable outcome is a minor timing advantage where an attacker can achieve a boosted reward multiplier from their first block of participation, an effect deemed to be within an acceptable margin of error.
 
@@ -22,9 +22,16 @@ The analysis confirms that the protocol's core logic cannot be broken by re-ente
 
 The ERC777 standard, used by the underlying \_token, provides tokensReceived and tokensToSend hooks. These hooks allow an attacker's contract to regain execution control during token transfers initiated by the LockquidityToken contract. This creates re-entrancy vectors in all four of the primary state-changing functions: lock(), unlock(), mintToAddress(), and burnToAddress().
 
-The contract's primary defense, the preventRecursion modifier, is insufficient as it can be bypassed by a multi-contract attack (i.e., Attacker A calls a function, and its hook calls Attacker B, which then re-enters the protocol).
+The contract employs two layers of defense against this:
 
-However, the protocol's secondary defense, the **Checks-Effects-Interactions pattern**, proves to be effective. In every potential re-entrancy scenario, the contract's state is updated _before_ the external call is made. This ensures that any re-entrant call operates on a state that is already consistent and finalized, preventing exploits.
+1.  **Primary Defense (Flawed):** The preventRecursion modifier. This is insufficient as it can be bypassed by a multi-contract attack (i.e., Attacker A calls a function, and its hook calls Attacker B, which then re-enters the protocol).
+    
+2.  **Secondary Defenses (Effective):** The protocol's security relies on two robust architectural patterns:
+    
+    *   **Checks-Effects-Interactions Pattern:** In every potential re-entrancy scenario, the contract's state is updated _before_ the external call is made. This ensures that any re-entrant call operates on a state that is already consistent and finalized.
+        
+    *   **msg.sender-Scoped Logic:** All core functions operate on the state of the direct caller (addressLocks\[\_msgSender()\]). This prevents a second contract in a multi-contract attack from manipulating the state of the original attacker. For example, if AttackerA calls lock(), its hook cannot use AttackerB to call unlock() on AttackerA's behalf, as the unlock call would be scoped to addressLocks\[AttackerB\].
+        
 
 #### Impact Analysis
 
@@ -78,6 +85,6 @@ The getAddressTimeMultiplier() function, which is critical for calculating rewar
 
 ### 6\. Overall Conclusion
 
-The LockquidityToken contract correctly anticipates the re-entrancy risks inherent in its dependencies and successfully mitigates them through rigorous adherence to the Checks-Effects-Interactions pattern. The identified attack paths do not allow for the manipulation of the contract's core logic or for any significant financial gain.
+The LockquidityToken contract correctly anticipates the re-entrancy risks inherent in its dependencies and successfully mitigates them through a multi-layered defense of msg.sender-scoped logic and rigorous adherence to the Checks-Effects-Interactions pattern. The identified attack paths do not allow for the manipulation of the contract's core logic or for any significant financial gain.
 
 The primary friction points for this protocol are more likely to stem from ecosystem challenges related to the ERC777 standard, such as the lack of default ERC1820 hook support in modern smart contract wallets, rather than from the core logic of the contract itself.
